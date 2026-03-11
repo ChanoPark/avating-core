@@ -1,3 +1,21 @@
 spring:
   application:
     name: ${APPLICATION_NAME}
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: ${JPA_FORMAT_SQL}
+        jdbc:
+          batch_size: ${JPA_BATCH_SIZE}
+        order_inserts: true
+        order_updates: true
+      show-sql: ${JPA_SHOW_SQL}
+      open-in-view: false
