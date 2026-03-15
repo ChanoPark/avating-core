@@ -15,7 +15,18 @@ spring:
         format_sql: ${JPA_FORMAT_SQL}
         jdbc:
           batch_size: ${JPA_BATCH_SIZE}
+          time_zone: ${JPA_TZ}
         order_inserts: true
         order_updates: true
       show-sql: ${JPA_SHOW_SQL}
       open-in-view: false
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED}
+    path: ${SWAGGER_PATH}
+    tags-sorter: ${SWAGGER_TAGS_SORTER}
+    operations-sorter: ${SWAGGER_OPER_SORTER}
+  api-docs:
+    enabled: ${SWAGGER_API_ENABLED}
+    path: ${SWAGGER_API_PATH}
