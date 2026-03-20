@@ -40,6 +40,7 @@ out/
 
 ### ETC
 *.properties
+**/*-prod*
 
 *.log
 logs/
@@ -48,3 +49,8 @@ logs/
 .DS_Store
 .AppleDouble
 .LSOverride
+.editorconfig
+
+.claude/
+CLAUDE.md
+/docs/

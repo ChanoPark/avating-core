@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN">
+
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%-5level}{FATAL=red blink, ERROR=red bold, WARN=yellow bold, INFO=green bold, DEBUG=cyan, TRACE=white} %pid %style{[%-20.20t]}{bright_black} %style{[%X{traceId:-}]}{bright_black} %style{%-40.40c{1.}}{cyan} : %msg%n%xThrowable</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}" charset="UTF-8"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- 애플리케이션 코드 -->
+        <AsyncLogger name="com.chanos.avatingcore" level="DEBUG" includeLocation="false" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+        </AsyncLogger>
+
+        <!-- Hibernate SQL 쿼리 및 바인딩 파라미터 -->
+        <AsyncLogger name="org.hibernate.SQL" level="DEBUG" includeLocation="false" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.hibernate.orm.jdbc.bind" level="TRACE" includeLocation="false" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+        </AsyncLogger>
+
+        <!-- Spring Security 필터 체인 -->
+        <AsyncLogger name="org.springframework.security" level="INFO" includeLocation="false" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+        </AsyncLogger>
+
+        <!-- 트랜잭션 경계 확인 -->
+        <AsyncLogger name="org.springframework.transaction.interceptor" level="INFO" includeLocation="false" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+        </AsyncLogger>
+
+        <AsyncRoot level="INFO" includeLocation="false">
+            <AppenderRef ref="CONSOLE"/>
+        </AsyncRoot>
+    </Loggers>
+
+</Configuration>

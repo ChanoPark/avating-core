@@ -21,6 +21,9 @@ spring:
       show-sql: ${JPA_SHOW_SQL}
       open-in-view: false
 
+logging:
+  config: ${LOG_CONFIG}
+
 springdoc:
   swagger-ui:
     enabled: ${SWAGGER_ENABLED}
