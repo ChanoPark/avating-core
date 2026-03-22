@@ -20,6 +20,25 @@ services:
       timeout: 5s
       retries: 5
 
+  valkey:
+    build:
+      context: valkey
+      dockerfile: Dockerfile
+    image: ${VALKEY_IMAGE}
+    container_name: ${COMPOSE_PROJECT_NAME}-valkey
+    restart: unless-stopped
+    ports:
+      - "${VALKEY_PORT:-6379}:6379"
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
+    driver: local
+  valkey_data:
     driver: local
