@@ -37,3 +37,11 @@ springdoc:
   api-docs:
     enabled: ${SWAGGER_API_ENABLED}
     path: ${SWAGGER_API_PATH}
+
+ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+
+jwt:
+  secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY}
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY}
