@@ -9,5 +9,7 @@ import org.springframework.http.HttpStatus
 interface ErrorCode {
     val status: HttpStatus
     val code: String
+    val reason: String
     val message: String
+        get() = reason
 }

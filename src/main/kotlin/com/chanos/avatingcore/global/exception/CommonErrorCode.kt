@@ -10,6 +10,7 @@ enum class CommonErrorCode(
     override val status: HttpStatus,
     override val code: String,
     override val message: String,
+    override val reason: String = message,
 ) : ErrorCode {
 
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON_400_001", "입력값이 올바르지 않습니다"),
