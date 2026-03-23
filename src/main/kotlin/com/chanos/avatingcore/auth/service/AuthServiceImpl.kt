@@ -36,17 +36,17 @@ class AuthServiceImpl(
         memberService.validateNewMember(request.email, request.nickname)
 
         // 회원 생성
-        val member = memberService.createMember(
+        val memberAuthInfo: MemberAuthInfo = memberService.createMember(
             email = request.email,
             hashedPassword = passwordEncoder.encode(rawPassword)!!,
             nickname = request.nickname,
         )
-        val memberId: UUID = member.id ?: throw AuthException.of(AuthErrorCode.INTERNAL_SERVER_ERROR)
-        log.debug("member_created memberId={}, nickname={}", memberId, member.nickname)
+
+        log.debug("member_created memberAuthInfo={}", memberAuthInfo)
 
         // 토큰 발급
-        val authTokenResponse: AuthTokenResponse = issueTokenPair(memberId)
-        updateRefreshToken(memberId, authTokenResponse.refreshToken)
+        val authTokenResponse: AuthTokenResponse = issueTokenPair(memberAuthInfo.memberId)
+        updateRefreshToken(memberAuthInfo.memberId, authTokenResponse.refreshToken)
 
         return authTokenResponse
     }

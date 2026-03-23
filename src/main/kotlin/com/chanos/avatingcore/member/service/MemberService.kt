@@ -1,7 +1,6 @@
 package com.chanos.avatingcore.member.service
 
 import com.chanos.avatingcore.auth.vo.MemberAuthInfo
-import com.chanos.avatingcore.member.entity.Member
 
 interface MemberService {
     /**
@@ -9,7 +8,7 @@ interface MemberService {
      * @param email 이메일
      * @param nickname 닉네임
      */
-    fun validateNewMember(email: String, nickname: String): Unit
+    fun validateNewMember(email: String, nickname: String)
 
     /**
      * 회원 생성
@@ -18,7 +17,7 @@ interface MemberService {
      * @param nickname 닉네임
      * @return member
      */
-    fun createMember(email: String, hashedPassword: String, nickname: String): Member
+    fun createMember(email: String, hashedPassword: String, nickname: String): MemberAuthInfo
 
     /**
      * 회원 인증 정보 조회

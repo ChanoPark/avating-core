@@ -19,10 +19,12 @@ class MemberServiceImpl(
     }
 
     @Transactional
-    override fun createMember(email: String, hashedPassword: String, nickname: String): Member {
-        return memberRepository.save(
+    override fun createMember(email: String, hashedPassword: String, nickname: String): MemberAuthInfo {
+        val member: Member = memberRepository.save(
             Member(email = email, password = hashedPassword, nickname = nickname)
         )
+
+        return MemberAuthInfo.fromMember(member)
     }
 
     override fun findMemberAuthInfo(email: String): MemberAuthInfo? {
