@@ -1,5 +1,6 @@
 package com.chanos.avatingcore.member.service
 
+import com.chanos.avatingcore.auth.vo.MemberAuthInfo
 import com.chanos.avatingcore.member.entity.Member
 
 interface MemberService {
@@ -18,4 +19,11 @@ interface MemberService {
      * @return member
      */
     fun createMember(email: String, hashedPassword: String, nickname: String): Member
+
+    /**
+     * 회원 인증 정보 조회
+     * @param email 이메일
+     * @return
+     */
+    fun findMemberAuthInfo(email: String): MemberAuthInfo?
 }

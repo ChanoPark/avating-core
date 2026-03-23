@@ -1,5 +1,6 @@
 package com.chanos.avatingcore.member.service
 
+import com.chanos.avatingcore.auth.vo.MemberAuthInfo
 import com.chanos.avatingcore.member.entity.Member
 import com.chanos.avatingcore.member.exception.MemberErrorCode
 import com.chanos.avatingcore.member.exception.MemberException
@@ -22,6 +23,10 @@ class MemberServiceImpl(
         return memberRepository.save(
             Member(email = email, password = hashedPassword, nickname = nickname)
         )
+    }
+
+    override fun findMemberAuthInfo(email: String): MemberAuthInfo? {
+        return memberRepository.findMemberAuthInfoByEmail(email)
     }
 
     private fun existEmail(email: String): Boolean = memberRepository.existsByEmail(email)

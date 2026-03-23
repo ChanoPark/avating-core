@@ -15,8 +15,8 @@ class Member(
     @Column(name = "email", length = 320, nullable = false, unique = true)
     val email: String,
 
-    @Column(name = "password", nullable = true)
-    var password: String? = null,
+    @Column(name = "password", nullable = false)
+    var password: String,
 
     @Column(name = "nickname", length = 30, nullable = false, unique = true)
     var nickname: String,

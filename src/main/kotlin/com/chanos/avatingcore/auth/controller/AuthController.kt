@@ -1,5 +1,6 @@
 package com.chanos.avatingcore.auth.controller
 
+import com.chanos.avatingcore.auth.dto.request.LoginRequest
 import com.chanos.avatingcore.auth.dto.request.SignupRequest
 import com.chanos.avatingcore.auth.dto.response.AuthTokenResponse
 import com.chanos.avatingcore.auth.service.AuthService
@@ -22,4 +23,9 @@ class AuthController(
     @ResponseStatus(HttpStatus.CREATED)
     override fun signup(@Valid @RequestBody request: SignupRequest): ApiResponse<AuthTokenResponse> =
         ApiResponse.of(authService.signup(request))
+
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
+    override fun login(@Valid @RequestBody request: LoginRequest): ApiResponse<AuthTokenResponse> =
+        ApiResponse.of(authService.login(request))
 }

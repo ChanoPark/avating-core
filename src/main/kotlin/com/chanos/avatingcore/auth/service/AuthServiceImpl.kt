@@ -1,5 +1,6 @@
 package com.chanos.avatingcore.auth.service
 
+import com.chanos.avatingcore.auth.dto.request.LoginRequest
 import com.chanos.avatingcore.auth.dto.request.SignupRequest
 import com.chanos.avatingcore.auth.dto.response.AuthTokenResponse
 import com.chanos.avatingcore.auth.exception.AuthErrorCode
@@ -7,6 +8,7 @@ import com.chanos.avatingcore.auth.exception.AuthException
 import com.chanos.avatingcore.auth.repository.RefreshTokenRepository
 import com.chanos.avatingcore.crypto.service.RsaCryptoService
 import com.chanos.avatingcore.auth.jwt.JwtProvider
+import com.chanos.avatingcore.auth.vo.MemberAuthInfo
 import com.chanos.avatingcore.global.util.logger
 import com.chanos.avatingcore.member.service.MemberService
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -23,7 +25,7 @@ class AuthServiceImpl(
     private val jwtProvider: JwtProvider,
 ) : AuthService {
 
-    private val logger = logger()
+    private val log = logger()
 
     @Transactional
     override fun signup(request: SignupRequest): AuthTokenResponse {
@@ -40,11 +42,30 @@ class AuthServiceImpl(
             nickname = request.nickname,
         )
         val memberId: UUID = member.id ?: throw AuthException.of(AuthErrorCode.INTERNAL_SERVER_ERROR)
-        logger.debug("member_created memberId={}, nickname={}", memberId, member.nickname)
+        log.debug("member_created memberId={}, nickname={}", memberId, member.nickname)
 
         // 토큰 발급
         val authTokenResponse: AuthTokenResponse = issueTokenPair(memberId)
         updateRefreshToken(memberId, authTokenResponse.refreshToken)
+
+        return authTokenResponse
+    }
+
+    override fun login(request: LoginRequest): AuthTokenResponse {
+        val memberAuthInfo: MemberAuthInfo = memberService.findMemberAuthInfo(request.email)
+            ?: throw AuthException.of(AuthErrorCode.NOT_FOUND_MEMBER)
+
+        // 비밀번호 확인
+        val rawPassword = decryptPassword(request.encryptedPassword)
+        if (isInvalidPassword(rawPassword, memberAuthInfo.password)) {
+            throw AuthException.of(AuthErrorCode.INVALID_PASSWORD)
+        }
+
+        log.debug("member_login memberAuthInfo={}", memberAuthInfo)
+
+        // 토큰 발급
+        val authTokenResponse: AuthTokenResponse = issueTokenPair(memberAuthInfo.memberId)
+        updateRefreshToken(memberAuthInfo.memberId, authTokenResponse.refreshToken)
 
         return authTokenResponse
     }
@@ -54,7 +75,7 @@ class AuthServiceImpl(
      */
     private fun decryptPassword(encryptedBase64: String): String =
         runCatching { rsaCryptoService.decrypt(encryptedBase64) }
-            .onFailure { logger.debug("decrypt_password_failed reason={}", it.message) }
+            .onFailure { log.debug("decrypt_password_failed reason={}", it.message) }
             .getOrElse { throw AuthException(AuthErrorCode.RSA_DECRYPTION_FAILED) }
 
     /**
@@ -100,4 +121,10 @@ class AuthServiceImpl(
             expirySeconds = jwtProvider.refreshTokenExpirySeconds,
         )
     }
+
+    /**
+     * 올바른 비밀번호인지 확인
+     */
+    private fun isInvalidPassword(rawPassword: String, hashedPassword: String): Boolean =
+        !passwordEncoder.matches(rawPassword, hashedPassword)
 }
