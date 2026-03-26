@@ -3,7 +3,9 @@ package com.chanos.avatingcore.auth.controller
 import com.chanos.avatingcore.auth.dto.response.AuthTokenResponse
 import com.chanos.avatingcore.auth.exception.AuthErrorCode
 import com.chanos.avatingcore.auth.exception.AuthException
+import com.chanos.avatingcore.auth.jwt.JwtProvider
 import com.chanos.avatingcore.auth.service.AuthService
+import com.chanos.avatingcore.global.security.JwtAuthenticationEntryPoint
 import com.chanos.avatingcore.member.exception.MemberErrorCode
 import com.chanos.avatingcore.member.exception.MemberException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -29,6 +31,12 @@ class AuthControllerTest : BehaviorSpec() {
 
     @MockkBean
     lateinit var authService: AuthService
+
+    @MockkBean
+    lateinit var jwtProvider: JwtProvider
+
+    @MockkBean
+    lateinit var jwtAuthenticationEntryPoint: JwtAuthenticationEntryPoint
 
     private val objectMapper = ObjectMapper()
 

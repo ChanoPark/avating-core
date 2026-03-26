@@ -1,5 +1,10 @@
 package com.chanos.avatingcore.auth.jwt
 
+import com.chanos.avatingcore.auth.exception.AuthErrorCode
+import com.chanos.avatingcore.auth.exception.AuthException
+import io.jsonwebtoken.Claims
+import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
@@ -34,6 +39,51 @@ class JwtProvider(
      */
     fun generateRefreshToken(memberId: UUID): String =
         buildToken(memberId, refreshTokenExpirySeconds, TokenType.REFRESH)
+
+    /**
+     * 토큰 서명·형식·만료 검증 후 Claims 반환
+     * @throws AuthException EXPIRED_ACCESS_TOKEN, INVALID_ACCESS_TOKEN
+     */
+    fun validateAndParseToken(
+        token: String,
+        tokenType: TokenType = TokenType.ACCESS,
+    ): Claims =
+        runCatching {
+            Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .payload
+        }.getOrElse { e ->
+            when (e) {
+                is ExpiredJwtException -> when (tokenType) {
+                    TokenType.ACCESS -> throw AuthException(AuthErrorCode.EXPIRED_ACCESS_TOKEN)
+                    TokenType.REFRESH -> throw AuthException(AuthErrorCode.EXPIRED_REFRESH_TOKEN)
+                }
+                is JwtException, is IllegalArgumentException -> throw AuthException(AuthErrorCode.INVALID_ACCESS_TOKEN)
+                else -> throw e
+            }
+        }
+
+    /**
+     * Claims에서 memberId 추출
+     */
+    fun extractMemberId(claims: Claims): UUID = UUID.fromString(claims.subject)
+
+    /**
+     * Claims에서 JTI 추출
+     */
+    fun extractJti(claims: Claims): String =
+        claims.id ?: throw AuthException(AuthErrorCode.INVALID_ACCESS_TOKEN)
+
+    /**
+     * Claims에서 TokenType 추출
+     */
+    fun extractTokenType(claims: Claims): TokenType {
+        val typeValue = claims.get(CLAIM_TYPE, String::class.java)
+        return TokenType.entries.firstOrNull { it.value == typeValue }
+            ?: throw AuthException(AuthErrorCode.INVALID_TOKEN_TYPE)
+    }
 
     /**
      * Token 생성

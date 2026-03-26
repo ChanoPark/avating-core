@@ -2,9 +2,12 @@ package com.chanos.avatingcore.auth.controller
 
 import com.chanos.avatingcore.auth.dto.request.LoginRequest
 import com.chanos.avatingcore.auth.dto.request.SignupRequest
+import com.chanos.avatingcore.auth.dto.request.RefreshTokenRequest
 import com.chanos.avatingcore.auth.dto.response.AuthTokenResponse
 import com.chanos.avatingcore.auth.service.AuthService
 import com.chanos.avatingcore.global.response.ApiResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
@@ -28,4 +31,13 @@ class AuthController(
     @ResponseStatus(HttpStatus.OK)
     override fun login(@Valid @RequestBody request: LoginRequest): ApiResponse<AuthTokenResponse> =
         ApiResponse.of(authService.login(request))
+
+    @PostMapping("/refresh")
+    @ResponseStatus(HttpStatus.OK)
+    override fun refresh(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        @Valid @RequestBody refreshTokenRequest: RefreshTokenRequest,
+    ): ApiResponse<AuthTokenResponse> =
+        ApiResponse.of(authService.refresh(refreshTokenRequest.refreshToken))
 }

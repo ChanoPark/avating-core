@@ -1,5 +1,8 @@
 package com.chanos.avatingcore.global.config
 
+import com.chanos.avatingcore.auth.jwt.JwtProvider
+import com.chanos.avatingcore.global.security.JwtAuthenticationEntryPoint
+import com.chanos.avatingcore.global.security.JwtAuthenticationFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -9,13 +12,17 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig {
+class SecurityConfig(
+    private val jwtProvider: JwtProvider,
+    private val jwtAuthenticationEntryPoint: JwtAuthenticationEntryPoint,
+) {
     @Value("\${ALLOWED_ORIGINS}")
     private lateinit var allowedOrigins: String
 
@@ -28,6 +35,7 @@ class SecurityConfig {
             .csrf { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .exceptionHandling { it.authenticationEntryPoint(jwtAuthenticationEntryPoint) }
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers(
@@ -39,6 +47,10 @@ class SecurityConfig {
                     ).permitAll()
                     .anyRequest().authenticated()
             }
+            .addFilterBefore(
+                JwtAuthenticationFilter(jwtProvider, jwtAuthenticationEntryPoint),
+                UsernamePasswordAuthenticationFilter::class.java
+            )
         return http.build()
     }
 

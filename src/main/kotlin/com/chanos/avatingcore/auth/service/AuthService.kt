@@ -18,4 +18,11 @@ interface AuthService {
      * @return JWT Token Pair
      */
     fun login(request: LoginRequest): AuthTokenResponse
+
+    /**
+     * Refresh Token으로 Access Token 재발급
+     * @param refreshToken Refresh Token
+     * @return 새 JWT Token Pair
+     */
+    fun refresh(refreshToken: String): AuthTokenResponse
 }

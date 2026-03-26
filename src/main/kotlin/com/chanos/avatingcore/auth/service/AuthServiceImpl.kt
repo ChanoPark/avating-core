@@ -5,10 +5,11 @@ import com.chanos.avatingcore.auth.dto.request.SignupRequest
 import com.chanos.avatingcore.auth.dto.response.AuthTokenResponse
 import com.chanos.avatingcore.auth.exception.AuthErrorCode
 import com.chanos.avatingcore.auth.exception.AuthException
-import com.chanos.avatingcore.auth.repository.RefreshTokenRepository
-import com.chanos.avatingcore.crypto.service.RsaCryptoService
 import com.chanos.avatingcore.auth.jwt.JwtProvider
+import com.chanos.avatingcore.auth.jwt.TokenType
+import com.chanos.avatingcore.auth.repository.RefreshTokenRepository
 import com.chanos.avatingcore.auth.vo.MemberAuthInfo
+import com.chanos.avatingcore.crypto.service.RsaCryptoService
 import com.chanos.avatingcore.global.util.logger
 import com.chanos.avatingcore.member.service.MemberService
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -49,6 +50,32 @@ class AuthServiceImpl(
         updateRefreshToken(memberAuthInfo.memberId, authTokenResponse.refreshToken)
 
         return authTokenResponse
+    }
+
+    override fun refresh(refreshToken: String): AuthTokenResponse {
+        val claims = jwtProvider.validateAndParseToken(refreshToken, TokenType.REFRESH)
+
+        // 토큰 유효성 검사
+        if (jwtProvider.extractTokenType(claims) != TokenType.REFRESH) {
+            throw AuthException(AuthErrorCode.INVALID_TOKEN_TYPE)
+        }
+
+        val memberId = jwtProvider.extractMemberId(claims)
+        val jti = jwtProvider.extractJti(claims)
+
+        if (!refreshTokenRepository.exists(memberId, jti)) {
+            log.warn("not_found_refresh_token memberId={} jti={}", memberId, jti)
+            throw AuthException(AuthErrorCode.NOT_FOUND_REFRESH_TOKEN)
+        }
+
+        // 토큰 재발급
+        log.debug("update_refresh_token memberId={}", memberId)
+        refreshTokenRepository.delete(memberId, jti)
+
+        val newTokenResponse = issueTokenPair(memberId)
+        updateRefreshToken(memberId, newTokenResponse.refreshToken)
+
+        return newTokenResponse
     }
 
     override fun login(request: LoginRequest): AuthTokenResponse {
@@ -115,9 +142,15 @@ class AuthServiceImpl(
      * Refresh Token을 Valkey에 저장
      */
     private fun updateRefreshToken(memberId: UUID, refreshToken: String) {
+        /**
+         * @note 디바이스 종류가 여러 개가 되기 전까지, 한 개의 Refresh Token만 갖는다.
+         */
+        refreshTokenRepository.deleteAllByMemberId(memberId)
+
+        val jti = jwtProvider.extractJti(jwtProvider.validateAndParseToken(refreshToken))
         refreshTokenRepository.save(
             memberId = memberId,
-            token = refreshToken,
+            jti = jti,
             expirySeconds = jwtProvider.refreshTokenExpirySeconds,
         )
     }
