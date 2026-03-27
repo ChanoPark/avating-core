@@ -10,6 +10,8 @@ enum class MemberErrorCode(
     override val reason: String = message,
 ) : ErrorCode {
 
+    NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "MEMBER_404_001", "회원을 찾을 수 없습니다."),
+
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "MEMBER_409_001", "이미 사용 중인 이메일입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "MEMBER_409_002", "이미 사용 중인 닉네임입니다."),
 }
