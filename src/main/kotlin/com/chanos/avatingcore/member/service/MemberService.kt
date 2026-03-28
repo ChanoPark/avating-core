@@ -1,6 +1,8 @@
 package com.chanos.avatingcore.member.service
 
 import com.chanos.avatingcore.auth.vo.MemberAuthInfo
+import com.chanos.avatingcore.member.entity.Member
+import java.util.UUID
 
 interface MemberService {
     /**
@@ -25,4 +27,11 @@ interface MemberService {
      * @return
      */
     fun findMemberAuthInfo(email: String): MemberAuthInfo?
+
+    /**
+     * ID로 회원 조회
+     * @param memberId 회원 ID
+     * @return Member
+     */
+    fun findById(memberId: UUID): Member
 }

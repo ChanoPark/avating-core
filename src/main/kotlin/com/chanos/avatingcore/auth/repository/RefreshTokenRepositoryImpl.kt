@@ -12,7 +12,7 @@ class RefreshTokenRepositoryImpl(
 
     companion object {
         private const val EXISTENCE_MARKER = "1"
-        private const val REFRESH_TOKEN_PREFIX = "auth:user:"
+        private const val REFRESH_TOKEN_PREFIX = "auth:member:"
 
         private fun key(memberId: UUID, jti: String) = "$REFRESH_TOKEN_PREFIX$memberId:rt:$jti"
     }

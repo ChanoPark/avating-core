@@ -7,6 +7,7 @@ import com.chanos.avatingcore.member.exception.MemberException
 import com.chanos.avatingcore.member.repository.MemberRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 class MemberServiceImpl(
@@ -30,6 +31,10 @@ class MemberServiceImpl(
     override fun findMemberAuthInfo(email: String): MemberAuthInfo? {
         return memberRepository.findMemberAuthInfoByEmail(email)
     }
+
+    @Transactional(readOnly = true)
+    override fun findById(memberId: UUID): Member =
+        memberRepository.findById(memberId).orElseThrow { MemberException(MemberErrorCode.NOT_FOUND_MEMBER) }
 
     private fun existEmail(email: String): Boolean = memberRepository.existsByEmail(email)
     private fun existNickname(nickname: String): Boolean = memberRepository.existsByNickname(nickname)
