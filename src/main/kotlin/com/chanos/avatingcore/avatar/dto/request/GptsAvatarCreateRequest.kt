@@ -34,7 +34,7 @@ data class GptsAvatarCreateRequest(
         val planningLevel: Int,
 
         @field:Min(0) @field:Max(100)
-        val directness: Int,
+        val humorous: Int,
 
         @field:Min(0) @field:Max(100)
         val affectionExpression: Int,

@@ -76,7 +76,7 @@ class AvatarServiceImpl(
                 extroversion = personaRequest.extroversion,
                 empathy = personaRequest.empathy,
                 planningLevel = personaRequest.planningLevel,
-                directness = personaRequest.directness,
+                humorous = personaRequest.humorous,
                 affectionExpression = personaRequest.affectionExpression,
                 frequentExpressions = personaRequest.frequentExpressions,
             )

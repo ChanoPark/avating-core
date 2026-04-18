@@ -34,8 +34,8 @@ class Persona(
     @Column(name = "planning_level", nullable = false)
     var planningLevel: Int,
 
-    @Column(name = "directness", nullable = false)
-    var directness: Int,
+    @Column(name = "humorous", nullable = false)
+    var humorous: Int,
 
     @Column(name = "affection_expression", nullable = false)
     var affectionExpression: Int,
@@ -57,12 +57,12 @@ class Persona(
             extroversion: Int,
             empathy: Int,
             planningLevel: Int,
-            directness: Int,
+            humorous: Int,
             affectionExpression: Int,
             frequentExpressions: List<String> = emptyList(),
         ): Persona {
             require(
-                listOf(openness, extroversion, empathy, planningLevel, directness, affectionExpression).all { it in 0..100 },
+                listOf(openness, extroversion, empathy, planningLevel, humorous, affectionExpression).all { it in 0..100 },
             ) { "페르소나 지표는 0~100 범위여야 합니다." }
 
             return Persona(
@@ -71,7 +71,7 @@ class Persona(
                 extroversion = extroversion,
                 empathy = empathy,
                 planningLevel = planningLevel,
-                directness = directness,
+                humorous = humorous,
                 affectionExpression = affectionExpression,
                 frequentExpressions = frequentExpressions,
             )
