@@ -1,6 +1,7 @@
 package com.chanos.avatingcore.persona.repository
 
 import com.chanos.avatingcore.persona.entity.ConnectCode
+import com.chanos.avatingcore.persona.vo.ConnectCodeEntry
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Repository
@@ -15,17 +16,10 @@ class ConnectCodeCacheRepositoryImpl(
 ) : ConnectCodeCacheRepository {
 
     companion object {
-        private const val CODE_PREFIX = "profiler:connectcode:"
+        private const val CODE_PREFIX = "avatar:connectcode:"
 
         private fun codeKey(connectCode: String) = "$CODE_PREFIX$connectCode"
     }
-
-    data class ConnectCodeEntry(
-        val memberId: String,
-        val email: String,
-        val nickname: String,
-        val expiresAt: String,
-    )
 
     override fun save(connectCode: String, memberId: UUID, email: String, nickname: String, expiresAt: OffsetDateTime) {
         val entry = ConnectCodeEntry(
@@ -39,6 +33,11 @@ class ConnectCodeCacheRepositoryImpl(
             objectMapper.writeValueAsString(entry),
             Duration.ofSeconds(ConnectCode.STORE_TTL_SECONDS)
         )
+    }
+
+    override fun findByConnectCode(connectCode: String): ConnectCodeEntry? {
+        val json = redisTemplate.opsForValue().get(codeKey(connectCode)) ?: return null
+        return objectMapper.readValue(json, ConnectCodeEntry::class.java)
     }
 
     override fun delete(connectCode: String) {

@@ -52,6 +52,11 @@ class ConnectCode(
         this.connectCodeStatus = ConnectCodeStatus.COLLECTING
     }
 
+    /** 수집 완료 */
+    fun collected() {
+        this.connectCodeStatus = ConnectCodeStatus.COLLECTED
+    }
+
     /** 삭제 */
     fun delete() {
         this.connectCodeStatus = ConnectCodeStatus.DELETED

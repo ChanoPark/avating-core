@@ -44,6 +44,7 @@ class SecurityConfig(
                         "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
+                        "/api/avatars/custom-gpts/**", // Custom GPTs 연동 API는 JWT 인증 제외
                     ).permitAll()
                     .anyRequest().authenticated()
             }
