@@ -25,6 +25,9 @@ class Persona(
     @Column(name = "openness", nullable = false)
     var openness: Int,
 
+    @Column(name = "imagination", nullable = false)
+    var imagination: Int,
+
     @Column(name = "extroversion", nullable = false)
     var extroversion: Int,
 
@@ -54,6 +57,7 @@ class Persona(
         fun of(
             avatar: Avatar,
             openness: Int,
+            imagination: Int,
             extroversion: Int,
             empathy: Int,
             planningLevel: Int,
@@ -68,6 +72,7 @@ class Persona(
             return Persona(
                 avatar = avatar,
                 openness = openness,
+                imagination = imagination,
                 extroversion = extroversion,
                 empathy = empathy,
                 planningLevel = planningLevel,

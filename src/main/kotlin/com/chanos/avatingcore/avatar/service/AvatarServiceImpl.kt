@@ -73,6 +73,7 @@ class AvatarServiceImpl(
             Persona.of(
                 avatar = avatar,
                 openness = personaRequest.openness,
+                imagination = personaRequest.imagination,
                 extroversion = personaRequest.extroversion,
                 empathy = personaRequest.empathy,
                 planningLevel = personaRequest.planningLevel,

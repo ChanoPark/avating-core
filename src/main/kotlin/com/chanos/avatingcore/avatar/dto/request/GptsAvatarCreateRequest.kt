@@ -25,6 +25,9 @@ data class GptsAvatarCreateRequest(
         val openness: Int,
 
         @field:Min(0) @field:Max(100)
+        val imagination: Int,
+
+        @field:Min(0) @field:Max(100)
         val extroversion: Int,
 
         @field:Min(0) @field:Max(100)
