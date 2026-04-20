@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import org.springframework.web.bind.annotation.RequestParam
 
 @Tag(name = "Persona", description = "페르소나 API")
@@ -29,6 +31,8 @@ interface PersonaControllerSpec {
     fun getSurveyAllTypeQuestions(
         @Parameter(description = "유형별 질문 개수 (1~10)", example = "1")
         @RequestParam(required = false, defaultValue = "1")
+        @Min(value = 1, message = "항목 별 최소 질문 개수는 1개 이상입니다.")
+        @Max(value = 10, message = "항목 별 최대 질문 개수는 10개 이하입니다.")
         questionCount: Int
     ): ApiResponse<List<SurveyQuestionResponse>>
 }

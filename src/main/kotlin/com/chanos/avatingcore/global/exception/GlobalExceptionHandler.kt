@@ -2,6 +2,7 @@ package com.chanos.avatingcore.global.exception
 
 import com.chanos.avatingcore.global.response.ErrorResponse
 import com.chanos.avatingcore.global.util.logger
+import jakarta.validation.ConstraintViolationException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -30,6 +31,19 @@ class GlobalExceptionHandler {
         }
         val errorCode = CommonErrorCode.INVALID_INPUT
         logger.debug("[{}] invalid_input={}", errorCode.code, fieldErrors)
+        return ResponseEntity
+            .status(errorCode.status)
+            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message, errors = fieldErrors))
+    }
+
+    /** Constraint 위반 */
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handleConstraintViolationException(e: ConstraintViolationException): ResponseEntity<ErrorResponse> {
+        val fieldErrors = e.constraintViolations.map {
+            ErrorResponse.FieldError(field = it.propertyPath.toString(), message = it.message)
+        }
+        val errorCode = CommonErrorCode.INVALID_INPUT
+        logger.debug("[{}] constraint_violation={}", errorCode.code, fieldErrors)
         return ResponseEntity
             .status(errorCode.status)
             .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message, errors = fieldErrors))
