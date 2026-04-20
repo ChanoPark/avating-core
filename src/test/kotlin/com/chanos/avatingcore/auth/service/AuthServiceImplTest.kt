@@ -15,11 +15,12 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.jsonwebtoken.Claims
+import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.util.UUID
 
@@ -40,7 +41,9 @@ class AuthServiceImplTest : BehaviorSpec({
     val MEMBER_ID = UUID.randomUUID()
     val ACCESS_TOKEN = "mock.access.token"
     val REFRESH_TOKEN = "mock.refresh.token"
+    val REFRESH_JTI = UUID.randomUUID().toString()
     val EXPIRES_IN = 3600L
+    val refreshClaims = mockk<Claims>()
 
     fun stubSuccessfulSignup(rawPassword: String = VALID_RAW_PASSWORD) {
         val memberAuthInfo = MemberAuthInfo(email = VALID_EMAIL, memberId = MEMBER_ID, password = HASHED_PASSWORD)
@@ -50,7 +53,9 @@ class AuthServiceImplTest : BehaviorSpec({
         every { jwtProvider.generateRefreshToken(MEMBER_ID) } returns REFRESH_TOKEN
         every { jwtProvider.accessTokenExpirySeconds } returns EXPIRES_IN
         every { jwtProvider.refreshTokenExpirySeconds } returns 604800L
-        every { refreshTokenRepository.save(MEMBER_ID, REFRESH_TOKEN, 604800L) } just Runs
+        every { jwtProvider.validateAndParseToken(REFRESH_TOKEN) } returns refreshClaims
+        every { jwtProvider.extractJti(refreshClaims) } returns REFRESH_JTI
+        every { refreshTokenRepository.save(MEMBER_ID, REFRESH_JTI, 604800L) } just Runs
     }
 
     afterTest { clearAllMocks() }
@@ -224,7 +229,9 @@ class AuthServiceImplTest : BehaviorSpec({
             every { jwtProvider.generateRefreshToken(MEMBER_ID) } returns REFRESH_TOKEN
             every { jwtProvider.accessTokenExpirySeconds } returns EXPIRES_IN
             every { jwtProvider.refreshTokenExpirySeconds } returns 604800L
-            every { refreshTokenRepository.save(MEMBER_ID, REFRESH_TOKEN, 604800L) } just Runs
+            every { jwtProvider.validateAndParseToken(REFRESH_TOKEN) } returns refreshClaims
+            every { jwtProvider.extractJti(refreshClaims) } returns REFRESH_JTI
+            every { refreshTokenRepository.save(MEMBER_ID, REFRESH_JTI, 604800L) } just Runs
 
             `when`("login을 호출하면") {
                 val result = authService.login(LoginRequest(VALID_EMAIL, ENCRYPTED_PASSWORD))
