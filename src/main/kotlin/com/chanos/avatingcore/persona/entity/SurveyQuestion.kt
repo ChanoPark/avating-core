@@ -37,7 +37,7 @@ class SurveyQuestion(
 ) : BaseEntity() {
 
     @OneToMany(mappedBy = "question", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    val options: MutableList<SurveyQuestionOption> = mutableListOf()
+    val answers: MutableList<SurveyQuestionAnswer> = mutableListOf()
 
     companion object {
         fun of(
@@ -53,8 +53,8 @@ class SurveyQuestion(
         )
     }
 
-    fun addOption(option: SurveyQuestionOption) {
-        options.add(option)
-        option.question = this
+    fun addAnswer(answer: SurveyQuestionAnswer) {
+        answers.add(answer)
+        answer.question = this
     }
 }

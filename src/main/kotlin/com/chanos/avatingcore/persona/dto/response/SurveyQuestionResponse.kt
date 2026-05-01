@@ -8,7 +8,7 @@ data class SurveyQuestionResponse(
     val title: String,
     val primaryType: PersonaStatType,
     val questionType: SurveyQuestionType,
-    val options: List<SurveyQuestionOptionResponse>,
+    val answers: List<SurveyQuestionAnswerResponse>,
 ) {
     companion object {
         fun of(
@@ -16,17 +16,16 @@ data class SurveyQuestionResponse(
             title: String,
             primaryType: PersonaStatType,
             questionType: SurveyQuestionType,
-            options: List<SurveyQuestionOptionResponse>,
-        ) = SurveyQuestionResponse(id, title, primaryType, questionType, options)
+            answers: List<SurveyQuestionAnswerResponse>,
+        ) = SurveyQuestionResponse(id, title, primaryType, questionType, answers)
     }
 }
 
-data class SurveyQuestionOptionResponse(
-    val optionId: String,
+data class SurveyQuestionAnswerResponse(
+    val answerId: String,
     val text: String,
 ) {
     companion object {
-        fun of(optionId: String, text: String) = SurveyQuestionOptionResponse(optionId, text)
+        fun of(answerId: String, text: String) = SurveyQuestionAnswerResponse(answerId, text)
     }
 }
-

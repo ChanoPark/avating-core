@@ -1,9 +1,9 @@
 package com.chanos.avatingcore.persona.service
 
-import com.chanos.avatingcore.persona.dto.response.SurveyQuestionOptionResponse
+import com.chanos.avatingcore.persona.dto.response.SurveyQuestionAnswerResponse
 import com.chanos.avatingcore.persona.dto.response.SurveyQuestionResponse
 import com.chanos.avatingcore.persona.entity.SurveyQuestion
-import com.chanos.avatingcore.persona.entity.SurveyQuestionOption
+import com.chanos.avatingcore.persona.entity.SurveyQuestionAnswer
 import com.chanos.avatingcore.persona.repository.SurveyQuestionRepository
 import com.chanos.avatingcore.persona.vo.PersonaStatType
 import com.chanos.avatingcore.persona.vo.SurveyQuestionType
@@ -28,17 +28,16 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         title: String,
         primaryType: PersonaStatType,
         questionType: SurveyQuestionType = SurveyQuestionType.SINGLE_CHOICE_5,
-        optionCount: Int = 5,
+        answerCount: Int = 5,
     ): SurveyQuestion {
         val question = SurveyQuestion.of(id = id, title = title, primaryType = primaryType, questionType = questionType)
-        repeat(optionCount) { idx ->
-            val option = SurveyQuestionOption.of(
-                id = "${id}_opt_$idx",
+        repeat(answerCount) { idx ->
+            val answer = SurveyQuestionAnswer.of(
+                id = "${id}_ans_$idx",
                 text = "선택지 $idx",
-                score = idx,
                 displayOrder = idx,
             )
-            question.addOption(option)
+            question.addAnswer(answer)
         }
         return question
     }
@@ -62,7 +61,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
     given("PersonaStatType 각 유형에 질문이 1개씩 존재할 때") {
 
         `when`("questionCount=1로 getSurveyAllTypeQuestions를 호출하면") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildOneQuestionPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildOneQuestionPerType()
             val result = sut.getSurveyAllTypeQuestions(questionCount = 1)
 
             then("PersonaStatType 유형 수와 동일한 개수의 질문이 반환된다") {
@@ -71,7 +70,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
 
         `when`("questionCount 기본값(1)으로 getSurveyAllTypeQuestions를 호출하면") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildOneQuestionPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildOneQuestionPerType()
             val result = sut.getSurveyAllTypeQuestions()
 
             then("PersonaStatType 유형 수와 동일한 개수의 질문이 반환된다") {
@@ -80,12 +79,12 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
 
         `when`("repository가 호출되는지 검증할 때") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildOneQuestionPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildOneQuestionPerType()
             sut.getSurveyAllTypeQuestions(questionCount = 1)
 
             then("repository가 정확히 1번 호출된다") {
                 verify(exactly = 1) {
-                    surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any())
+                    surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any())
                 }
             }
         }
@@ -94,7 +93,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
     given("PersonaStatType 각 유형에 질문이 3개씩 존재할 때") {
 
         `when`("questionCount=1로 getSurveyAllTypeQuestions를 호출하면") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
             val result = sut.getSurveyAllTypeQuestions(questionCount = 1)
 
             then("각 유형에서 정확히 1개씩만 선택되어 PersonaStatType 유형 수만큼 반환된다") {
@@ -103,7 +102,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
 
         `when`("questionCount=1로 getSurveyAllTypeQuestions를 호출하면 (유형 중복 검사)") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
             val result = sut.getSurveyAllTypeQuestions(questionCount = 1)
 
             then("반환된 질문의 primaryType이 모두 서로 다르다") {
@@ -113,7 +112,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
 
         `when`("questionCount=2로 getSurveyAllTypeQuestions를 호출하면") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
             val result = sut.getSurveyAllTypeQuestions(questionCount = 2)
 
             then("각 유형에서 2개씩 선택되어 PersonaStatType 유형 수 x 2 만큼 반환된다") {
@@ -122,7 +121,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
 
         `when`("questionCount=10으로 getSurveyAllTypeQuestions를 호출하면 (유형 별 질문이 3개뿐일 때)") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns buildThreeQuestionsPerType()
             val result = sut.getSurveyAllTypeQuestions(questionCount = 10)
 
             then("각 유형에서 최대 존재하는 3개씩 반환된다") {
@@ -131,13 +130,13 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
     }
 
-    given("질문에 선택지(options)가 포함되어 있을 때") {
+    given("질문에 답변(answers)이 포함되어 있을 때") {
         val primaryType = PersonaStatType.OPENNESS
         val targetQuestion = buildQuestion(
             id = "q_openness",
             title = "개방성 질문",
             primaryType = primaryType,
-            optionCount = 5,
+            answerCount = 5,
         )
         val allQuestions = PersonaStatType.entries.mapIndexed { idx, type ->
             if (type == primaryType) targetQuestion
@@ -145,24 +144,24 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
         }
 
         `when`("getSurveyAllTypeQuestions를 호출하면") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns allQuestions
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns allQuestions
             val result = sut.getSurveyAllTypeQuestions(questionCount = 1)
 
-            then("OPENNESS 유형의 질문에 5개의 선택지가 포함된다") {
+            then("OPENNESS 유형의 질문에 5개의 답변이 포함된다") {
                 val opennessResponse = result.first { it.primaryType == primaryType }
-                opennessResponse.options shouldHaveSize 5
+                opennessResponse.answers shouldHaveSize 5
             }
         }
 
-        `when`("getSurveyAllTypeQuestions를 호출하면 (선택지 필드 검증)") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns allQuestions
+        `when`("getSurveyAllTypeQuestions를 호출하면 (답변 필드 검증)") {
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns allQuestions
             val result = sut.getSurveyAllTypeQuestions(questionCount = 1)
 
-            then("선택지 응답에 optionId와 text가 존재한다") {
+            then("답변 응답에 answerId와 text가 존재한다") {
                 val opennessResponse = result.first { it.primaryType == primaryType }
-                opennessResponse.options.forEach { option ->
-                    option.optionId shouldNotBe null
-                    option.text shouldNotBe null
+                opennessResponse.answers.forEach { answer ->
+                    answer.answerId shouldNotBe null
+                    answer.text shouldNotBe null
                 }
             }
         }
@@ -171,7 +170,7 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
     given("DB에 활성화된 질문이 없을 때") {
 
         `when`("getSurveyAllTypeQuestions를 호출하면") {
-            every { surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(any()) } returns emptyList()
+            every { surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(any()) } returns emptyList()
             val result = sut.getSurveyAllTypeQuestions(questionCount = 1)
 
             then("빈 리스트가 반환된다") {
@@ -183,13 +182,13 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
     given("SurveyQuestionResponse.of Factory Method 테스트") {
 
         `when`("of()를 호출하면") {
-            val options = listOf(SurveyQuestionOptionResponse.of("opt_1", "선택지 1"))
+            val answers = listOf(SurveyQuestionAnswerResponse.of("ans_1", "선택지 1"))
             val response = SurveyQuestionResponse.of(
                 id = "q_1",
                 title = "질문 1",
                 primaryType = PersonaStatType.OPENNESS,
                 questionType = SurveyQuestionType.SINGLE_CHOICE_5,
-                options = options,
+                answers = answers,
             )
 
             then("모든 필드가 올바르게 설정된다") {
@@ -197,21 +196,21 @@ class PersonaSurveyServiceImplTest : BehaviorSpec({
                 response.title shouldBe "질문 1"
                 response.primaryType shouldBe PersonaStatType.OPENNESS
                 response.questionType shouldBe SurveyQuestionType.SINGLE_CHOICE_5
-                response.options shouldHaveSize 1
-                response.options[0].optionId shouldBe "opt_1"
-                response.options[0].text shouldBe "선택지 1"
+                response.answers shouldHaveSize 1
+                response.answers[0].answerId shouldBe "ans_1"
+                response.answers[0].text shouldBe "선택지 1"
             }
         }
     }
 
-    given("SurveyQuestionOptionResponse.of Factory Method 테스트") {
+    given("SurveyQuestionAnswerResponse.of Factory Method 테스트") {
 
         `when`("of()를 호출하면") {
-            val option = SurveyQuestionOptionResponse.of("opt_1", "선택지 텍스트")
+            val answer = SurveyQuestionAnswerResponse.of("ans_1", "선택지 텍스트")
 
-            then("optionId와 text가 올바르게 설정된다") {
-                option.optionId shouldBe "opt_1"
-                option.text shouldBe "선택지 텍스트"
+            then("answerId와 text가 올바르게 설정된다") {
+                answer.answerId shouldBe "ans_1"
+                answer.text shouldBe "선택지 텍스트"
             }
         }
     }

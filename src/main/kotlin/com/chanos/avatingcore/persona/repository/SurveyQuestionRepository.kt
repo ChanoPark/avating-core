@@ -9,10 +9,10 @@ interface SurveyQuestionRepository : JpaRepository<SurveyQuestion, String> {
     @Query("""
       SELECT DISTINCT q
       FROM SurveyQuestion q
-      LEFT JOIN FETCH q.options o
+      LEFT JOIN FETCH q.answers a
       WHERE q.primaryType IN :types
         AND q.isActivated = true
-        AND o.isActivated = true
+        AND a.isActivated = true
     """)
-    fun findAllWithOptionsByPrimaryTypeIn(types: List<PersonaStatType>): List<SurveyQuestion>
+    fun findAllWithAnswersByPrimaryTypeIn(types: List<PersonaStatType>): List<SurveyQuestion>
 }

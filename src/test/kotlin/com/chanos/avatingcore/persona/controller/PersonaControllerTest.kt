@@ -3,7 +3,7 @@ package com.chanos.avatingcore.persona.controller
 import com.chanos.avatingcore.auth.jwt.JwtProvider
 import com.chanos.avatingcore.auth.jwt.TokenType
 import com.chanos.avatingcore.global.security.JwtAuthenticationEntryPoint
-import com.chanos.avatingcore.persona.dto.response.SurveyQuestionOptionResponse
+import com.chanos.avatingcore.persona.dto.response.SurveyQuestionAnswerResponse
 import com.chanos.avatingcore.persona.dto.response.SurveyQuestionResponse
 import com.chanos.avatingcore.persona.service.PersonaSurveyService
 import com.chanos.avatingcore.persona.vo.PersonaStatType
@@ -58,12 +58,12 @@ class PersonaControllerTest : BehaviorSpec() {
                 title = "질문 $idx",
                 primaryType = type,
                 questionType = SurveyQuestionType.SINGLE_CHOICE_5,
-                options = listOf(
-                    SurveyQuestionOptionResponse.of("opt_${idx}_0", "선택지 0"),
-                    SurveyQuestionOptionResponse.of("opt_${idx}_1", "선택지 1"),
-                    SurveyQuestionOptionResponse.of("opt_${idx}_2", "선택지 2"),
-                    SurveyQuestionOptionResponse.of("opt_${idx}_3", "선택지 3"),
-                    SurveyQuestionOptionResponse.of("opt_${idx}_4", "선택지 4"),
+                answers = listOf(
+                    SurveyQuestionAnswerResponse.of("ans_${idx}_0", "선택지 0"),
+                    SurveyQuestionAnswerResponse.of("ans_${idx}_1", "선택지 1"),
+                    SurveyQuestionAnswerResponse.of("ans_${idx}_2", "선택지 2"),
+                    SurveyQuestionAnswerResponse.of("ans_${idx}_3", "선택지 3"),
+                    SurveyQuestionAnswerResponse.of("ans_${idx}_4", "선택지 4"),
                 )
             )
         }
@@ -90,9 +90,9 @@ class PersonaControllerTest : BehaviorSpec() {
                             jsonPath("$.data[0].id") { value("q_0") }
                             jsonPath("$.data[0].title") { value("질문 0") }
                             jsonPath("$.data[0].questionType") { value("SINGLE_CHOICE_5") }
-                            jsonPath("$.data[0].options") { isArray() }
-                            jsonPath("$.data[0].options[0].optionId") { value("opt_0_0") }
-                            jsonPath("$.data[0].options[0].text") { value("선택지 0") }
+                            jsonPath("$.data[0].answers") { isArray() }
+                            jsonPath("$.data[0].answers[0].answerId") { value("ans_0_0") }
+                            jsonPath("$.data[0].answers[0].text") { value("선택지 0") }
                         }
                     }
                 }

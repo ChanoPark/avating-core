@@ -1,6 +1,6 @@
 package com.chanos.avatingcore.persona.service
 
-import com.chanos.avatingcore.persona.dto.response.SurveyQuestionOptionResponse
+import com.chanos.avatingcore.persona.dto.response.SurveyQuestionAnswerResponse
 import com.chanos.avatingcore.persona.dto.response.SurveyQuestionResponse
 import com.chanos.avatingcore.persona.repository.SurveyQuestionRepository
 import com.chanos.avatingcore.persona.vo.PersonaStatType
@@ -14,7 +14,7 @@ class PersonaSurveyServiceImpl(
 ) : PersonaSurveyService {
 
     override fun getSurveyAllTypeQuestions(questionCount: Int): List<SurveyQuestionResponse> {
-        return surveyQuestionRepository.findAllWithOptionsByPrimaryTypeIn(PersonaStatType.entries)
+        return surveyQuestionRepository.findAllWithAnswersByPrimaryTypeIn(PersonaStatType.entries)
             .groupBy { it.primaryType }
             .flatMap { (_, questions) -> questions.shuffled().take(questionCount) }
             .map { question ->
@@ -23,10 +23,10 @@ class PersonaSurveyServiceImpl(
                     title = question.title,
                     primaryType = question.primaryType,
                     questionType = question.questionType,
-                    options = question.options.map { option ->
-                        SurveyQuestionOptionResponse.of(
-                            optionId = option.id,
-                            text = option.text
+                    answers = question.answers.map { answer ->
+                        SurveyQuestionAnswerResponse.of(
+                            answerId = answer.id,
+                            text = answer.text
                         )
                     }
                 )
