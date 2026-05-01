@@ -1,7 +1,7 @@
 package com.chanos.avatingcore.persona.repository
 
 import com.chanos.avatingcore.persona.entity.ConnectCode
-import com.chanos.avatingcore.persona.entity.ConnectCodeStatus
+import com.chanos.avatingcore.persona.vo.ConnectCodeStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.util.UUID

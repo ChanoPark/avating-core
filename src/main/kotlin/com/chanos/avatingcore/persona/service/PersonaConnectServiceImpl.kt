@@ -4,7 +4,7 @@ import com.chanos.avatingcore.global.util.logger
 import com.chanos.avatingcore.member.service.MemberService
 import com.chanos.avatingcore.persona.dto.response.ConnectCodeResponse
 import com.chanos.avatingcore.persona.entity.ConnectCode
-import com.chanos.avatingcore.persona.entity.ConnectCodeStatus
+import com.chanos.avatingcore.persona.vo.ConnectCodeStatus
 import com.chanos.avatingcore.persona.exception.PersonaErrorCode
 import com.chanos.avatingcore.persona.exception.PersonaException
 import com.chanos.avatingcore.persona.repository.ConnectCodeCacheRepository

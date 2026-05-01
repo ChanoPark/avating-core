@@ -1,6 +1,7 @@
 package com.chanos.avatingcore.persona.entity
 
 import com.chanos.avatingcore.global.entity.BaseEntity
+import com.chanos.avatingcore.persona.vo.ConnectCodeStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType

@@ -1,4 +1,4 @@
-package com.chanos.avatingcore.persona.entity
+package com.chanos.avatingcore.persona.vo
 
 enum class ConnectCodeStatus {
     ISSUED,         // 생성
