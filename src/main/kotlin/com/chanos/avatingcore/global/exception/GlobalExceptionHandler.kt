@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -58,6 +59,16 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(errorCode.status)
             .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message, errors = fieldErrors))
+    }
+
+    /** 존재하지 않는 엔드포인트 */
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> {
+        val errorCode = CommonErrorCode.NOT_FOUND
+        logger.debug("[{}] no_resource_found: {}", errorCode.code, e.message)
+        return ResponseEntity
+            .status(errorCode.status)
+            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
     }
 
     /** INTERNAL SERVER ERROR */
