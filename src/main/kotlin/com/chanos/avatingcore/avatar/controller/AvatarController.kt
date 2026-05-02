@@ -1,10 +1,13 @@
 package com.chanos.avatingcore.avatar.controller
 
 import com.chanos.avatingcore.avatar.dto.request.GptsAvatarCreateRequest
+import com.chanos.avatingcore.avatar.dto.request.SurveyAvatarCreateRequest
 import com.chanos.avatingcore.avatar.service.AvatarService
 import com.chanos.avatingcore.global.response.ApiResponse
+import com.chanos.avatingcore.global.security.MemberPrincipal
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -23,6 +26,16 @@ class AvatarController(
         @RequestBody @Valid request: GptsAvatarCreateRequest,
     ): ApiResponse<Unit> {
         avatarService.createAvatarFromGpts(request)
+        return ApiResponse.of(Unit)
+    }
+
+    @PostMapping("/survey")
+    @ResponseStatus(HttpStatus.CREATED)
+    override fun createAvatarFromSurvey(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @RequestBody @Valid request: SurveyAvatarCreateRequest
+    ): ApiResponse<Unit> {
+        avatarService.createAvatarFromSurvey(principal.memberId, request)
         return ApiResponse.of(Unit)
     }
 }

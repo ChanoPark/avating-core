@@ -1,7 +1,7 @@
 package com.chanos.avatingcore.avatar.entity.enums
 
 enum class SourceType {
-    AVATING,
+    SURVEY,
     CHATGPT,
 
     ETC,

@@ -17,11 +17,11 @@ enum class AvatarErrorCode(
         reason = "Connect code not found in cache",
     ),
 
-    NOT_COLLECTING_STATUS(
-        status = HttpStatus.CONFLICT,
-        code = "AVATAR_409_001",
-        message = "수집 중 상태의 연결 코드가 아닙니다.",
-        reason = "ConnectCode status is not COLLECTING",
+    INVALID_SURVEY_ANSWER(
+        status = HttpStatus.BAD_REQUEST,
+        code = "AVATAR_400_002",
+        message = "유효하지 않은 설문 답변입니다.",
+        reason = "Some survey answer IDs were not found",
     ),
 
     NOT_FOUND_MEMBER(
@@ -29,5 +29,19 @@ enum class AvatarErrorCode(
         code = "AVATAR_404_001",
         message = "연결 코드에 해당하는 회원을 찾을 수 없습니다.",
         reason = "Member not found for the given connect code",
+    ),
+
+    NOT_COLLECTING_STATUS(
+        status = HttpStatus.CONFLICT,
+        code = "AVATAR_409_001",
+        message = "수집 중 상태의 연결 코드가 아닙니다.",
+        reason = "ConnectCode status is not COLLECTING",
+    ),
+
+    DUPLICATE_AVATAR_NAME(
+        status = HttpStatus.CONFLICT,
+        code = "AVATAR_409_002",
+        message = "동일한 아바타 이름이 존재합니다.",
+        reason = "An avatar with the same name already exists.",
     ),
 }

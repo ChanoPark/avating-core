@@ -1,8 +1,8 @@
 package com.chanos.avatingcore.avatar.dto.request
 
 import jakarta.validation.Valid
-import jakarta.validation.constraints.Max
-import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
@@ -21,26 +21,26 @@ data class GptsAvatarCreateRequest(
     val persona: PersonaRequest,
 ) {
     data class PersonaRequest(
-        @field:Min(0) @field:Max(100)
-        val openness: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val openness: Double,
 
-        @field:Min(0) @field:Max(100)
-        val imagination: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val imagination: Double,
 
-        @field:Min(0) @field:Max(100)
-        val extroversion: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val extroversion: Double,
 
-        @field:Min(0) @field:Max(100)
-        val empathy: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val empathy: Double,
 
-        @field:Min(0) @field:Max(100)
-        val planningLevel: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val planningLevel: Double,
 
-        @field:Min(0) @field:Max(100)
-        val humorous: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val humorous: Double,
 
-        @field:Min(0) @field:Max(100)
-        val affectionExpression: Int,
+        @field:DecimalMin("0.0") @field:DecimalMax("100.0")
+        val affectionExpression: Double,
 
         val frequentExpressions: List<String> = emptyList(),
     )

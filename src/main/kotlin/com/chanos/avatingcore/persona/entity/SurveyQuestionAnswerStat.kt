@@ -24,7 +24,7 @@ class SurveyQuestionAnswerStat(
     val statType: PersonaStatType,
 
     @Column(name = "score", nullable = false)
-    val score: Int,
+    val score: Double,
 ) : BaseEntity() {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +32,7 @@ class SurveyQuestionAnswerStat(
     lateinit var answer: SurveyQuestionAnswer
 
     companion object {
-        fun of(id: String, statType: PersonaStatType, score: Int, ) =
+        fun of(id: String, statType: PersonaStatType, score: Double) =
             SurveyQuestionAnswerStat(id = id, statType = statType, score = score,)
     }
 }

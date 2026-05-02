@@ -4,6 +4,7 @@ import com.chanos.avatingcore.global.response.ErrorResponse
 import com.chanos.avatingcore.global.util.logger
 import jakarta.validation.ConstraintViolationException
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -34,6 +35,16 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(errorCode.status)
             .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message, errors = fieldErrors))
+    }
+
+    /** JSON 파싱 실패 (필드 누락, 타입 불일치 등) */
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
+        val errorCode = CommonErrorCode.INVALID_INPUT
+        logger.debug("[{}] message_not_readable: {}", errorCode.code, e.message)
+        return ResponseEntity
+            .status(errorCode.status)
+            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
     }
 
     /** Constraint 위반 */
