@@ -24,11 +24,25 @@ enum class AvatarErrorCode(
         reason = "Some survey answer IDs were not found",
     ),
 
+    ALREADY_PRIMARY_AVATAR(
+        status = HttpStatus.BAD_REQUEST,
+        code = "AVATAR_400_003",
+        message = "이미 대표 아바타로 설정되어 있습니다.",
+        reason = "This avatar is already set as the primary avatar.",
+    ),
+
     NOT_FOUND_MEMBER(
         status = HttpStatus.NOT_FOUND,
         code = "AVATAR_404_001",
         message = "연결 코드에 해당하는 회원을 찾을 수 없습니다.",
         reason = "Member not found for the given connect code",
+    ),
+
+    NOT_FOUND_AVATAR(
+        status = HttpStatus.NOT_FOUND,
+        code = "AVATAR_404_002",
+        message = "아바타를 찾을 수 없습니다.",
+        reason = "Avatar not found or does not belong to the member",
     ),
 
     NOT_COLLECTING_STATUS(

@@ -7,4 +7,6 @@ import java.util.UUID
 interface AvatarRepository : JpaRepository<Avatar, UUID> {
 
     fun existsByMemberIdAndName(memberId: UUID, name: String): Boolean
+    fun findByMemberIdAndIsPrimaryTrue(memberId: UUID): Avatar?
+    fun findByIdAndMemberId(id: UUID, memberId: UUID): Avatar?
 }

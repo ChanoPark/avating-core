@@ -15,6 +15,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import java.util.UUID
 
 @Entity
@@ -37,12 +38,19 @@ class Avatar(
 
     @Column(name = "description", nullable = true, length = 200)
     val description: String? = null,
+
+    @Column(name = "is_primary", nullable = false)
+    var isPrimary: Boolean = false,
 ) : BaseEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     val id: UUID? = null
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0
 
     companion object {
         fun of(
@@ -51,6 +59,7 @@ class Avatar(
             name: String,
             sourceType: SourceType,
             description: String? = null,
+            isPrimary: Boolean = false,
         ): Avatar {
             return Avatar(
                 member = member,
@@ -58,7 +67,18 @@ class Avatar(
                 name = name,
                 sourceType = sourceType,
                 description = description,
+                isPrimary = isPrimary,
             )
         }
+    }
+
+    /** 대표 아바타 활성화 */
+    fun activatePrimary() {
+        this.isPrimary = true
+    }
+
+    /** 대표 아바타 비활성화 */
+    fun deactivatePrimary() {
+        this.isPrimary = false
     }
 }

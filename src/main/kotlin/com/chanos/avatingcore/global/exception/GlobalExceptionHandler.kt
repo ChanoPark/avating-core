@@ -3,6 +3,7 @@ package com.chanos.avatingcore.global.exception
 import com.chanos.avatingcore.global.response.ErrorResponse
 import com.chanos.avatingcore.global.util.logger
 import jakarta.validation.ConstraintViolationException
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -59,6 +60,16 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(errorCode.status)
             .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message, errors = fieldErrors))
+    }
+
+    /** 낙관적 락 충돌 */
+    @ExceptionHandler(OptimisticLockingFailureException::class)
+    fun handleOptimisticLockingFailureException(e: OptimisticLockingFailureException): ResponseEntity<ErrorResponse> {
+        val errorCode = CommonErrorCode.CONCURRENT_UPDATE
+        logger.debug("[{}] optimistic_lock_failure: {}", errorCode.code, e.message)
+        return ResponseEntity
+            .status(errorCode.status)
+            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
     }
 
     /** 존재하지 않는 엔드포인트 */
