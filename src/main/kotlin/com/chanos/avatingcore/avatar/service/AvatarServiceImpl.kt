@@ -70,7 +70,7 @@ class AvatarServiceImpl(
                 avatarType = AvatarType.EXTERNAL_SERVICE,
                 name = request.avatarName,
                 sourceType = SourceType.CHATGPT,
-                sourceDescription = request.sourceDescription,
+                description = request.description,
             )
         )
         log.debug("gpts_avatar_created memberId={}, connectCode={}", memberId, request.connectCode)
@@ -115,7 +115,7 @@ class AvatarServiceImpl(
                 avatarType = AvatarType.SURVEY,
                 name = request.avatarName,
                 sourceType = SourceType.SURVEY,
-                sourceDescription = request.description,
+                description = request.description,
             )
         )
         log.debug("survey_avatar_created memberId={}, avatarName={}", memberId, request.avatarName)

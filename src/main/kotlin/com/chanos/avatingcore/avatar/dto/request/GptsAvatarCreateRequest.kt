@@ -14,8 +14,8 @@ data class GptsAvatarCreateRequest(
     @field:Size(max = 50, message = "아바타 이름은 50자 이내여야 합니다.")
     val avatarName: String,
 
-    @field:Size(max = 200, message = "출처 설명은 200자 이내여야 합니다.")
-    val sourceDescription: String? = null,
+    @field:Size(max = 200, message = "아바타 설명은 200자 이내여야 합니다.")
+    val description: String? = null,
 
     @field:Valid
     val persona: PersonaRequest,

@@ -35,8 +35,8 @@ class Avatar(
     @Column(name = "source_type", nullable = false, length = 20)
     val sourceType: SourceType,
 
-    @Column(name = "source_description", nullable = true, length = 200)
-    val sourceDescription: String? = null,
+    @Column(name = "description", nullable = true, length = 200)
+    val description: String? = null,
 ) : BaseEntity() {
 
     @Id
@@ -50,14 +50,14 @@ class Avatar(
             avatarType: AvatarType,
             name: String,
             sourceType: SourceType,
-            sourceDescription: String? = null,
+            description: String? = null,
         ): Avatar {
             return Avatar(
                 member = member,
                 avatarType = avatarType,
                 name = name,
                 sourceType = sourceType,
-                sourceDescription = sourceDescription,
+                description = description,
             )
         }
     }
