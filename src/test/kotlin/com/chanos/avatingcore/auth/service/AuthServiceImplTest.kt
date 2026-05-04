@@ -55,6 +55,7 @@ class AuthServiceImplTest : BehaviorSpec({
         every { jwtProvider.refreshTokenExpirySeconds } returns 604800L
         every { jwtProvider.validateAndParseToken(REFRESH_TOKEN) } returns refreshClaims
         every { jwtProvider.extractJti(refreshClaims) } returns REFRESH_JTI
+        every { refreshTokenRepository.deleteAllByMemberId(MEMBER_ID) } just Runs
         every { refreshTokenRepository.save(MEMBER_ID, REFRESH_JTI, 604800L) } just Runs
     }
 
@@ -231,6 +232,7 @@ class AuthServiceImplTest : BehaviorSpec({
             every { jwtProvider.refreshTokenExpirySeconds } returns 604800L
             every { jwtProvider.validateAndParseToken(REFRESH_TOKEN) } returns refreshClaims
             every { jwtProvider.extractJti(refreshClaims) } returns REFRESH_JTI
+            every { refreshTokenRepository.deleteAllByMemberId(MEMBER_ID) } just Runs
             every { refreshTokenRepository.save(MEMBER_ID, REFRESH_JTI, 604800L) } just Runs
 
             `when`("login을 호출하면") {

@@ -348,7 +348,7 @@ class AuthControllerTest : BehaviorSpec() {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(LOGIN_REQUEST)
                         }.andExpect {
-                            status { isNotFound() }
+                            status { isBadRequest() }
                             jsonPath("$.code") { value("AUTH_400_001") }
                         }
                     }
@@ -364,7 +364,7 @@ class AuthControllerTest : BehaviorSpec() {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(LOGIN_REQUEST)
                         }.andExpect {
-                            status { isNotFound() }
+                            status { isBadRequest() }
                             jsonPath("$.code") { value("AUTH_400_002") }
                         }
                     }
