@@ -39,7 +39,6 @@ interface AvatarControllerSpec {
         SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 요청 데이터"),
         SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
         SwaggerApiResponse(responseCode = "404", description = "회원 없음"),
-        SwaggerApiResponse(responseCode = "409", description = "중복된 아바타 이름"),
     )
     fun createAvatarFromSurvey(
         @AuthenticationPrincipal principal: MemberPrincipal,
