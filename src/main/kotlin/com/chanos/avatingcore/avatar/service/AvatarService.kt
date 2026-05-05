@@ -31,4 +31,11 @@ interface AvatarService {
      * @param name 확인할 아바타 이름
      */
     fun isAvatarNameDuplicated(name: String): Boolean
+
+    /**
+     * 아바타 정보 요약 조회
+     * @param memberId 요청 회원 ID
+     * @param avatarId 조회 대상 아바타 ID
+     */
+    fun getAvatarSummary(memberId: UUID, avatarId: UUID): AvatarSummaryResponse
 }

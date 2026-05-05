@@ -62,4 +62,12 @@ class AvatarController(
     ): ApiResponse<AvatarNameDuplicateResponse> {
         return ApiResponse.of(AvatarNameDuplicateResponse.of(avatarService.isAvatarNameDuplicated(name)))
     }
+
+    @GetMapping("/{avatarId}/summary")
+    override fun getAvatarSummary(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @PathVariable avatarId: UUID,
+    ): ApiResponse<AvatarSummaryResponse> {
+        return ApiResponse.of(avatarService.getAvatarSummary(principal.memberId, avatarId))
+    }
 }

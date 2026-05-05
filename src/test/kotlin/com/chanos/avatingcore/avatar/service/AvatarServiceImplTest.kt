@@ -9,6 +9,7 @@ import com.chanos.avatingcore.avatar.entity.enums.SourceType
 import com.chanos.avatingcore.avatar.exception.AvatarErrorCode
 import com.chanos.avatingcore.avatar.exception.AvatarException
 import com.chanos.avatingcore.avatar.repository.AvatarRepository
+import com.chanos.avatingcore.avatar.vo.AvatarPersonaProjection
 import com.chanos.avatingcore.member.dto.MemberWithAvatarCount
 import com.chanos.avatingcore.member.entity.Member
 import com.chanos.avatingcore.member.repository.MemberRepository
@@ -183,6 +184,60 @@ class AvatarServiceImplTest : BehaviorSpec({
                 every { avatarRepository.existsByName("새아바타") } returns false
 
                 sut.isAvatarNameDuplicated("새아바타") shouldBe false
+            }
+        }
+    }
+
+    given("getAvatarSummary - 아바타와 페르소나가 존재할 때") {
+        `when`("getAvatarSummary를 호출하면") {
+            then("아바타 요약 응답으로 매핑해 반환한다") {
+                val memberId = UUID.randomUUID()
+                val avatarId = UUID.randomUUID()
+                val projection = AvatarPersonaProjection(
+                    avatarId = avatarId,
+                    name = "테스트봇",
+                    description = null,
+                    openness = 70.0,
+                    imagination = 60.0,
+                    extroversion = 50.0,
+                    empathy = 80.0,
+                    planningLevel = 40.0,
+                    humorous = 55.0,
+                    affectionExpression = 65.0,
+                )
+                every { avatarRepository.findSummaryByIdWithPersona(avatarId, memberId) } returns projection
+
+                val result = sut.getAvatarSummary(memberId, avatarId)
+
+                result.avatarId shouldBe avatarId
+                result.name shouldBe "테스트봇"
+                result.description shouldBe ""
+                result.stats shouldBe mapOf(
+                    PersonaStatType.OPENNESS to 70.0,
+                    PersonaStatType.IMAGINATION to 60.0,
+                    PersonaStatType.EXTROVERSION to 50.0,
+                    PersonaStatType.EMPATHY to 80.0,
+                    PersonaStatType.PLANNING_LEVEL to 40.0,
+                    PersonaStatType.HUMOROUS to 55.0,
+                    PersonaStatType.AFFECTION_EXPRESSION to 65.0,
+                )
+                verify(exactly = 1) { avatarRepository.findSummaryByIdWithPersona(avatarId, memberId) }
+            }
+        }
+    }
+
+    given("getAvatarSummary - 아바타가 없거나 다른 회원 소유일 때") {
+        `when`("getAvatarSummary를 호출하면") {
+            then("AVATAR_404_002(NOT_FOUND_AVATAR) 예외가 발생한다") {
+                val memberId = UUID.randomUUID()
+                val avatarId = UUID.randomUUID()
+                every { avatarRepository.findSummaryByIdWithPersona(avatarId, memberId) } returns null
+
+                val ex = shouldThrow<AvatarException> {
+                    sut.getAvatarSummary(memberId, avatarId)
+                }
+
+                ex.errorCode shouldBe AvatarErrorCode.NOT_FOUND_AVATAR
             }
         }
     }

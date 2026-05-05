@@ -20,7 +20,6 @@ import com.chanos.avatingcore.persona.repository.ConnectCodeCacheRepository
 import com.chanos.avatingcore.persona.repository.ConnectCodeRepository
 import com.chanos.avatingcore.persona.repository.PersonaRepository
 import com.chanos.avatingcore.persona.repository.SurveyQuestionRepository
-import com.chanos.avatingcore.persona.vo.PersonaStatType.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -168,6 +167,12 @@ class AvatarServiceImpl(
     override fun isAvatarNameDuplicated(name: String): Boolean {
         return duplicateAvatarName(name)
     }
+
+    override fun getAvatarSummary(memberId: UUID, avatarId: UUID): AvatarSummaryResponse =
+        AvatarSummaryResponse.fromAvatarPersonaProjection(
+            avatarRepository.findSummaryByIdWithPersona(avatarId, memberId) ?: throw AvatarException.of(NOT_FOUND_AVATAR)
+        )
+
     /** 요청 받은 답변이 존재하는 답변인지 확인 후 반환 */
     private fun getAnswersFromRequest(requestAnswers: List<SurveyAnswerRequest>): List<SurveyQuestionAnswer> {
         val requestAnswerIds = requestAnswers.map { it.answerId }

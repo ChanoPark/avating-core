@@ -4,8 +4,10 @@ import com.chanos.avatingcore.auth.jwt.JwtProvider
 import com.chanos.avatingcore.auth.jwt.TokenType
 import com.chanos.avatingcore.avatar.exception.AvatarErrorCode
 import com.chanos.avatingcore.avatar.exception.AvatarException
+import com.chanos.avatingcore.avatar.dto.response.AvatarSummaryResponse
 import com.chanos.avatingcore.avatar.service.AvatarService
 import com.chanos.avatingcore.global.security.JwtAuthenticationEntryPoint
+import com.chanos.avatingcore.persona.vo.PersonaStatType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.jsonwebtoken.Claims
@@ -13,6 +15,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
@@ -507,6 +510,83 @@ class AvatarControllerTest : BehaviorSpec() {
                             header("Authorization", "Bearer mock.token")
                         }.andExpect {
                             status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+        }
+
+        given("GET /api/avatars/{avatarId}/summary") {
+
+            and("인증된 사용자가 본인의 아바타 요약 정보를 조회할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK와 아바타 요약 정보가 반환된다") {
+                        stubJwtAuthentication()
+                        val avatarId = UUID.randomUUID()
+                        val response = AvatarSummaryResponse(
+                            avatarId = avatarId,
+                            name = "테스트봇",
+                            description = "테스트 설명",
+                            stats = mapOf(
+                                PersonaStatType.OPENNESS to 70.0,
+                                PersonaStatType.IMAGINATION to 60.0,
+                                PersonaStatType.EXTROVERSION to 50.0,
+                                PersonaStatType.EMPATHY to 80.0,
+                                PersonaStatType.PLANNING_LEVEL to 40.0,
+                                PersonaStatType.HUMOROUS to 55.0,
+                                PersonaStatType.AFFECTION_EXPRESSION to 65.0,
+                            ),
+                        )
+                        every { avatarService.getAvatarSummary(mockMemberId, avatarId) } returns response
+
+                        mockMvc.get("/api/avatars/$avatarId/summary") {
+                            accept = MediaType.APPLICATION_JSON
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.avatarId") { value(avatarId.toString()) }
+                            jsonPath("$.data.name") { value("테스트봇") }
+                            jsonPath("$.data.description") { value("테스트 설명") }
+                            jsonPath("$.data.stats.OPENNESS") { value(70.0) }
+                            jsonPath("$.data.stats.PLANNING_LEVEL") { value(40.0) }
+                            jsonPath("$.data.stats.AFFECTION_EXPRESSION") { value(65.0) }
+                        }
+                        verify(exactly = 1) { avatarService.getAvatarSummary(mockMemberId, avatarId) }
+                    }
+                }
+            }
+
+            and("인증 토큰 없이 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("401 Unauthorized가 반환된다") {
+                        every { jwtAuthenticationEntryPoint.commence(any(), any(), any()) } answers {
+                            val response = secondArg<jakarta.servlet.http.HttpServletResponse>()
+                            response.status = 401
+                        }
+
+                        mockMvc.get("/api/avatars/${UUID.randomUUID()}/summary") {
+                            accept = MediaType.APPLICATION_JSON
+                        }.andExpect {
+                            status { isUnauthorized() }
+                        }
+                    }
+                }
+            }
+
+            and("아바타가 존재하지 않거나 다른 회원의 아바타일 때") {
+                `when`("GET 요청을 보내면") {
+                    then("AVATAR_404_002를 반환한다") {
+                        stubJwtAuthentication()
+                        val avatarId = UUID.randomUUID()
+                        every { avatarService.getAvatarSummary(mockMemberId, avatarId) } throws
+                            AvatarException.of(AvatarErrorCode.NOT_FOUND_AVATAR)
+
+                        mockMvc.get("/api/avatars/$avatarId/summary") {
+                            accept = MediaType.APPLICATION_JSON
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isNotFound() }
+                            jsonPath("$.code") { value("AVATAR_404_002") }
                         }
                     }
                 }

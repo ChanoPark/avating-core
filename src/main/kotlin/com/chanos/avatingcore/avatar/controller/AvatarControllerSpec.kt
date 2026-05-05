@@ -4,6 +4,7 @@ import com.chanos.avatingcore.avatar.dto.request.GptsAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.request.SurveyAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.response.AvatarIdResponse
 import com.chanos.avatingcore.avatar.dto.response.AvatarNameDuplicateResponse
+import com.chanos.avatingcore.avatar.dto.response.AvatarSummaryResponse
 import com.chanos.avatingcore.global.response.ApiResponse
 import com.chanos.avatingcore.global.security.MemberPrincipal
 import io.swagger.v3.oas.annotations.Operation
@@ -81,4 +82,19 @@ interface AvatarControllerSpec {
         @Size(max = 50, message = "{validation.avatar.name.size}")
         name: String,
     ): ApiResponse<AvatarNameDuplicateResponse>
+
+    @Operation(
+        summary = "아바타 요약 정보 조회",
+        description = "지정한 아바타의 이름, 설명, 페르소나 지표 요약을 조회합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "아바타 요약 정보 조회 성공"),
+        SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
+        SwaggerApiResponse(responseCode = "404", description = "아바타를 찾을 수 없거나 해당 회원의 아바타가 아님"),
+    )
+    fun getAvatarSummary(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @Parameter(description = "조회할 아바타 ID")
+        @PathVariable avatarId: UUID,
+    ): ApiResponse<AvatarSummaryResponse>
 }
