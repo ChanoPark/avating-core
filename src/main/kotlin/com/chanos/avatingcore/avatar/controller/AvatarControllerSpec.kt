@@ -6,11 +6,15 @@ import com.chanos.avatingcore.avatar.dto.response.AvatarIdResponse
 import com.chanos.avatingcore.avatar.dto.response.AvatarNameDuplicateResponse
 import com.chanos.avatingcore.avatar.dto.response.AvatarSummaryResponse
 import com.chanos.avatingcore.global.response.ApiResponse
+import com.chanos.avatingcore.global.response.ErrorResponse
 import com.chanos.avatingcore.global.security.MemberPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
@@ -30,36 +34,74 @@ interface AvatarControllerSpec {
     )
     @ApiResponses(
         SwaggerApiResponse(responseCode = "201", description = "아바타 생성 성공"),
-        SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 연결 코드 또는 요청 데이터"),
-        SwaggerApiResponse(responseCode = "404", description = "회원 없음"),
-        SwaggerApiResponse(responseCode = "409", description = "수집 중 상태의 연결 코드가 아님"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "유효하지 않은 연결 코드 또는 요청 데이터",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원 없음",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "409",
+            description = "수집 중 상태의 연결 코드가 아님",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
     )
     fun createAvatarFromGpts(@RequestBody @Valid request: GptsAvatarCreateRequest): ApiResponse<AvatarIdResponse>
 
     @Operation(
         summary = "설문 기반 아바타 생성",
         description = "사용자가 설문 답변을 제출하여 아바타를 생성합니다. 인증이 필요합니다.",
+        security = [SecurityRequirement(name = "bearer")],
     )
     @ApiResponses(
         SwaggerApiResponse(responseCode = "201", description = "아바타 생성 성공"),
-        SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 요청 데이터"),
-        SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
-        SwaggerApiResponse(responseCode = "404", description = "회원 없음"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "유효하지 않은 요청 데이터",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원 없음",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
     )
     fun createAvatarFromSurvey(
         @AuthenticationPrincipal principal: MemberPrincipal,
-        @RequestBody @Valid request: SurveyAvatarCreateRequest
+        @RequestBody @Valid request: SurveyAvatarCreateRequest,
     ): ApiResponse<AvatarIdResponse>
 
     @Operation(
         summary = "대표 아바타 변경",
         description = "지정한 아바타를 대표 아바타로 설정합니다.",
+        security = [SecurityRequirement(name = "bearer")],
     )
     @ApiResponses(
         SwaggerApiResponse(responseCode = "200", description = "대표 아바타 변경 성공"),
-        SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
-        SwaggerApiResponse(responseCode = "404", description = "회원이 없거나, 아바타를 찾을 수 없거나, 해당 회원의 아바타가 아님"),
-        SwaggerApiResponse(responseCode = "409", description = "이미 대표로 설정된 아바타"),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원이 없거나, 아바타를 찾을 수 없거나, 해당 회원의 아바타가 아님",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "409",
+            description = "이미 대표로 설정된 아바타",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
     )
     fun changePrimaryAvatar(
         @AuthenticationPrincipal principal: MemberPrincipal,
@@ -69,11 +111,20 @@ interface AvatarControllerSpec {
     @Operation(
         summary = "아바타 이름 중복 확인",
         description = "아바타 이름이 이미 사용 중인지 확인합니다. 인증이 필요합니다.",
+        security = [SecurityRequirement(name = "bearer")],
     )
     @ApiResponses(
         SwaggerApiResponse(responseCode = "200", description = "중복 확인 성공"),
-        SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 이름"),
-        SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "유효하지 않은 이름",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
     )
     fun checkAvatarNameDuplication(
         @Parameter(description = "확인할 아바타 이름", example = "avatarName")
@@ -86,11 +137,20 @@ interface AvatarControllerSpec {
     @Operation(
         summary = "아바타 요약 정보 조회",
         description = "지정한 아바타의 이름, 설명, 페르소나 지표 요약을 조회합니다.",
+        security = [SecurityRequirement(name = "bearer")],
     )
     @ApiResponses(
         SwaggerApiResponse(responseCode = "200", description = "아바타 요약 정보 조회 성공"),
-        SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
-        SwaggerApiResponse(responseCode = "404", description = "아바타를 찾을 수 없거나 해당 회원의 아바타가 아님"),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "아바타를 찾을 수 없거나 해당 회원의 아바타가 아님",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
     )
     fun getAvatarSummary(
         @AuthenticationPrincipal principal: MemberPrincipal,

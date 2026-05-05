@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Min
 import org.springframework.web.bind.annotation.RequestParam
 
 @Tag(name = "Persona", description = "페르소나 API")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "bearer")
 interface PersonaControllerSpec {
 
     @Operation(

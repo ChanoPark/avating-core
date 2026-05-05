@@ -1,9 +1,12 @@
 package com.chanos.avatingcore.persona.controller
 
 import com.chanos.avatingcore.global.response.ApiResponse
+import com.chanos.avatingcore.global.response.ErrorResponse
 import com.chanos.avatingcore.global.security.MemberPrincipal
 import com.chanos.avatingcore.persona.dto.response.ConnectCodeResponse
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -20,9 +23,21 @@ interface PersonaConnectControllerSpec {
     )
     @ApiResponses(
         SwaggerApiResponse(responseCode = "201", description = "연결 코드 발급 성공"),
-        SwaggerApiResponse(responseCode = "401", description = "인증되지 않은 요청"),
-        SwaggerApiResponse(responseCode = "404", description = "회원 없음"),
-        SwaggerApiResponse(responseCode = "500", description = "연결 코드 저장 실패"),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증되지 않은 요청",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "404",
+            description = "회원 없음",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "500",
+            description = "연결 코드 저장 실패",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
     )
     fun issueConnectCode(@AuthenticationPrincipal principal: MemberPrincipal): ApiResponse<ConnectCodeResponse>
 }
