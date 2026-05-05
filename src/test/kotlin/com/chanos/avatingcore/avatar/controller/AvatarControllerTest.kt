@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import java.util.UUID
@@ -433,6 +434,79 @@ class AvatarControllerTest : BehaviorSpec() {
                         }.andExpect {
                             status { isConflict() }
                             jsonPath("$.code") { value("AVATAR_409_002") }
+                        }
+                    }
+                }
+            }
+        }
+
+        given("GET /api/avatars/name-duplication") {
+
+            and("인증된 사용자가 이미 존재하는 이름을 확인할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK와 duplicated=true가 반환된다") {
+                        stubJwtAuthentication()
+                        every { avatarService.isAvatarNameDuplicated("테스트봇") } returns true
+
+                        mockMvc.get("/api/avatars/name-duplication") {
+                            accept = MediaType.APPLICATION_JSON
+                            param("name", "테스트봇")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.duplicated") { value(true) }
+                        }
+                    }
+                }
+            }
+
+            and("인증된 사용자가 사용 가능한 이름을 확인할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK와 duplicated=false가 반환된다") {
+                        stubJwtAuthentication()
+                        every { avatarService.isAvatarNameDuplicated("새아바타") } returns false
+
+                        mockMvc.get("/api/avatars/name-duplication") {
+                            accept = MediaType.APPLICATION_JSON
+                            param("name", "새아바타")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.duplicated") { value(false) }
+                        }
+                    }
+                }
+            }
+
+            and("인증 토큰 없이 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("401 Unauthorized가 반환된다") {
+                        every { jwtAuthenticationEntryPoint.commence(any(), any(), any()) } answers {
+                            val response = secondArg<jakarta.servlet.http.HttpServletResponse>()
+                            response.status = 401
+                        }
+
+                        mockMvc.get("/api/avatars/name-duplication") {
+                            accept = MediaType.APPLICATION_JSON
+                            param("name", "테스트봇")
+                        }.andExpect {
+                            status { isUnauthorized() }
+                        }
+                    }
+                }
+            }
+
+            and("빈 이름으로 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+
+                        mockMvc.get("/api/avatars/name-duplication") {
+                            accept = MediaType.APPLICATION_JSON
+                            param("name", "")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
                         }
                     }
                 }

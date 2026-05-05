@@ -3,16 +3,21 @@ package com.chanos.avatingcore.avatar.controller
 import com.chanos.avatingcore.avatar.dto.request.GptsAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.request.SurveyAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.response.AvatarIdResponse
+import com.chanos.avatingcore.avatar.dto.response.AvatarNameDuplicateResponse
 import com.chanos.avatingcore.global.response.ApiResponse
 import com.chanos.avatingcore.global.security.MemberPrincipal
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
 @Tag(name = "Avatar", description = "아바타 API")
@@ -59,4 +64,21 @@ interface AvatarControllerSpec {
         @AuthenticationPrincipal principal: MemberPrincipal,
         @PathVariable avatarId: UUID,
     ): ApiResponse<AvatarIdResponse>
+
+    @Operation(
+        summary = "아바타 이름 중복 확인",
+        description = "아바타 이름이 이미 사용 중인지 확인합니다. 인증이 필요합니다.",
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "중복 확인 성공"),
+        SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 이름"),
+        SwaggerApiResponse(responseCode = "401", description = "인증 필요"),
+    )
+    fun checkAvatarNameDuplication(
+        @Parameter(description = "확인할 아바타 이름", example = "avatarName")
+        @RequestParam
+        @NotBlank(message = "{validation.avatar.name.required}")
+        @Size(max = 50, message = "{validation.avatar.name.size}")
+        name: String,
+    ): ApiResponse<AvatarNameDuplicateResponse>
 }

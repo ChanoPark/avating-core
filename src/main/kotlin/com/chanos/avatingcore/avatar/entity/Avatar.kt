@@ -29,7 +29,7 @@ class Avatar(
     @Column(name = "avatar_type", nullable = false, length = 20)
     val avatarType: AvatarType,
 
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(name = "name", nullable = false, unique = true, length = 50)
     var name: String,
 
     @Enumerated(EnumType.STRING)

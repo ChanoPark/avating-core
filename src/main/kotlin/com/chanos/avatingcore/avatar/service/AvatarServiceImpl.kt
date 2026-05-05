@@ -3,6 +3,7 @@ package com.chanos.avatingcore.avatar.service
 import com.chanos.avatingcore.avatar.dto.request.GptsAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.request.SurveyAnswerRequest
 import com.chanos.avatingcore.avatar.dto.request.SurveyAvatarCreateRequest
+import com.chanos.avatingcore.avatar.dto.response.AvatarSummaryResponse
 import com.chanos.avatingcore.avatar.entity.Avatar
 import com.chanos.avatingcore.avatar.entity.enums.AvatarType
 import com.chanos.avatingcore.avatar.entity.enums.SourceType
@@ -19,6 +20,7 @@ import com.chanos.avatingcore.persona.repository.ConnectCodeCacheRepository
 import com.chanos.avatingcore.persona.repository.ConnectCodeRepository
 import com.chanos.avatingcore.persona.repository.PersonaRepository
 import com.chanos.avatingcore.persona.repository.SurveyQuestionRepository
+import com.chanos.avatingcore.persona.vo.PersonaStatType.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -163,6 +165,9 @@ class AvatarServiceImpl(
         return avatarId
     }
 
+    override fun isAvatarNameDuplicated(name: String): Boolean {
+        return duplicateAvatarName(name)
+    }
     /** 요청 받은 답변이 존재하는 답변인지 확인 후 반환 */
     private fun getAnswersFromRequest(requestAnswers: List<SurveyAnswerRequest>): List<SurveyQuestionAnswer> {
         val requestAnswerIds = requestAnswers.map { it.answerId }

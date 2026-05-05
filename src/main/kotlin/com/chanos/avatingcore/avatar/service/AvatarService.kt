@@ -2,6 +2,7 @@ package com.chanos.avatingcore.avatar.service
 
 import com.chanos.avatingcore.avatar.dto.request.GptsAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.request.SurveyAvatarCreateRequest
+import com.chanos.avatingcore.avatar.dto.response.AvatarSummaryResponse
 import java.util.UUID
 
 interface AvatarService {
@@ -24,4 +25,10 @@ interface AvatarService {
      * @param avatarId 대표로 지정할 아바타 ID
      */
     fun changePrimaryAvatar(memberId: UUID, avatarId: UUID): UUID
+
+    /**
+     * 아바타 이름 중복 여부 확인
+     * @param name 확인할 아바타 이름
+     */
+    fun isAvatarNameDuplicated(name: String): Boolean
 }

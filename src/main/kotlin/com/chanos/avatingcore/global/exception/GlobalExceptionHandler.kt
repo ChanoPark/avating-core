@@ -7,6 +7,7 @@ import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.ServletRequestBindingException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.servlet.resource.NoResourceFoundException
@@ -40,7 +41,10 @@ class GlobalExceptionHandler {
     }
 
     /** JSON 파싱 실패 (필드 누락, 타입 불일치 등) */
-    @ExceptionHandler(HttpMessageNotReadableException::class)
+    @ExceptionHandler(
+        ServletRequestBindingException::class,
+        HttpMessageNotReadableException::class
+    )
     fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
         val errorCode = CommonErrorCode.INVALID_INPUT
         logger.debug("[{}] message_not_readable: {}", errorCode.code, e.message)

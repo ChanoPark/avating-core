@@ -167,6 +167,26 @@ class AvatarServiceImplTest : BehaviorSpec({
         }
     }
 
+    given("isAvatarNameDuplicated - 같은 이름의 아바타가 존재할 때") {
+        `when`("isAvatarNameDuplicated를 호출하면") {
+            then("true를 반환한다") {
+                every { avatarRepository.existsByName("테스트봇") } returns true
+
+                sut.isAvatarNameDuplicated("테스트봇") shouldBe true
+            }
+        }
+    }
+
+    given("isAvatarNameDuplicated - 같은 이름의 아바타가 존재하지 않을 때") {
+        `when`("isAvatarNameDuplicated를 호출하면") {
+            then("false를 반환한다") {
+                every { avatarRepository.existsByName("새아바타") } returns false
+
+                sut.isAvatarNameDuplicated("새아바타") shouldBe false
+            }
+        }
+    }
+
     // ────────────────────────────────────────────────
     // createAvatarFromGpts — 신규 테스트
     // ────────────────────────────────────────────────
