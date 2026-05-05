@@ -308,7 +308,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     connectCodeRepository.findConnectCodeByMemberIdAndStatus(memberId, ConnectCodeStatus.COLLECTING)
                 } returns dbConnectCode
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 1L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, avatarName) } returns true
+                every { avatarRepository.existsByName(avatarName) } returns true
 
                 val ex = shouldThrow<AvatarException> {
                     sut.createAvatarFromGpts(request)
@@ -345,7 +345,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     connectCodeRepository.findConnectCodeByMemberIdAndStatus(memberId, ConnectCodeStatus.COLLECTING)
                 } returns dbConnectCode
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 0L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, request.avatarName) } returns false
+                every { avatarRepository.existsByName(request.avatarName) } returns false
                 every {
                     avatarRepository.save(match { it.isPrimary && it.avatarType == AvatarType.EXTERNAL_SERVICE })
                 } returns savedAvatar
@@ -395,7 +395,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     connectCodeRepository.findConnectCodeByMemberIdAndStatus(memberId, ConnectCodeStatus.COLLECTING)
                 } returns dbConnectCode
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 2L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, request.avatarName) } returns false
+                every { avatarRepository.existsByName(request.avatarName) } returns false
                 every {
                     avatarRepository.save(match { !it.isPrimary && it.avatarType == AvatarType.EXTERNAL_SERVICE })
                 } returns savedAvatar
@@ -489,7 +489,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     surveyQuestionRepository.findAnswersWithStatsByIds(listOf("ans-1"))
                 } returns listOf(foundAnswer)
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 1L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, avatarName) } returns true
+                every { avatarRepository.existsByName(avatarName) } returns true
 
                 val ex = shouldThrow<AvatarException> {
                     sut.createAvatarFromSurvey(memberId, request)
@@ -523,7 +523,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     surveyQuestionRepository.findAnswersWithStatsByIds(listOf("ans-1"))
                 } returns listOf(foundAnswer)
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 0L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, request.avatarName) } returns false
+                every { avatarRepository.existsByName(request.avatarName) } returns false
                 every {
                     avatarRepository.save(match { it.isPrimary && it.avatarType == AvatarType.SURVEY })
                 } returns savedAvatar
@@ -568,7 +568,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     surveyQuestionRepository.findAnswersWithStatsByIds(listOf("ans-1"))
                 } returns listOf(foundAnswer)
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 3L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, request.avatarName) } returns false
+                every { avatarRepository.existsByName(request.avatarName) } returns false
                 every {
                     avatarRepository.save(match { !it.isPrimary && it.avatarType == AvatarType.SURVEY })
                 } returns savedAvatar
@@ -618,7 +618,7 @@ class AvatarServiceImplTest : BehaviorSpec({
                     surveyQuestionRepository.findAnswersWithStatsByIds(listOf("ans-1", "ans-2"))
                 } returns listOf(answer1, answer2)
                 every { memberRepository.findMemberWithAvatarCountById(memberId) } returns MemberWithAvatarCount(member, 1L)
-                every { avatarRepository.existsByMemberIdAndName(memberId, request.avatarName) } returns false
+                every { avatarRepository.existsByName(request.avatarName) } returns false
                 every { avatarRepository.save(any()) } returns savedAvatar
                 every { personaRepository.save(capture(personaSlot)) } answers { firstArg() }
 

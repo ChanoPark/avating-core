@@ -60,7 +60,7 @@ class AvatarServiceImpl(
         val memberWithAvatarCount = memberRepository.findMemberWithAvatarCountById(memberId)
             ?: throw AvatarException.of(NOT_FOUND_MEMBER)
 
-        if (avatarRepository.existsByMemberIdAndName(memberId, request.avatarName)) {
+        if (duplicateAvatarName(request.avatarName)) {
             throw AvatarException.of(DUPLICATE_AVATAR_NAME)
         }
 
@@ -106,7 +106,7 @@ class AvatarServiceImpl(
         val memberWithAvatarCount: MemberWithAvatarCount = memberRepository.findMemberWithAvatarCountById(memberId)
             ?: throw AvatarException.of(NOT_FOUND_MEMBER)
 
-        if (existsAvatar(memberId, request.avatarName)) {
+        if (duplicateAvatarName(request.avatarName)) {
             throw AvatarException.of(DUPLICATE_AVATAR_NAME)
         }
 
@@ -173,7 +173,6 @@ class AvatarServiceImpl(
             }
     }
 
-    /** 사용자가 동일한 아바타를 가지고 있는지 확인 */
-    private fun existsAvatar(memberId: UUID, name: String): Boolean =
-        avatarRepository.existsByMemberIdAndName(memberId, name)
+    /** 아바타 이름 중복 확인 */
+    private fun duplicateAvatarName(name: String): Boolean = avatarRepository.existsByName(name)
 }
