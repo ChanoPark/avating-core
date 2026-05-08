@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
 import java.util.UUID
 
-data class MatchingInvitationRequest(
+data class CreateInvitationRequest(
     @field:NotNull
     @Schema(description = "초대하는 아바타 ID", required = true)
     val inviterAvatarId: UUID,

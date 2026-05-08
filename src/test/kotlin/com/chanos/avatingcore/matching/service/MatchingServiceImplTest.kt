@@ -5,7 +5,7 @@ import com.chanos.avatingcore.avatar.service.AvatarService
 import com.chanos.avatingcore.matching.entity.MatchingInvitation
 import com.chanos.avatingcore.matching.exception.MatchingErrorCode
 import com.chanos.avatingcore.matching.exception.MatchingException
-import com.chanos.avatingcore.matching.repository.MatchingRepository
+import com.chanos.avatingcore.matching.repository.MatchingInvitationRepository
 import com.chanos.avatingcore.matching.vo.MatchingInvitationInfo
 import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
 import com.chanos.avatingcore.member.entity.Member
@@ -13,16 +13,19 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import java.util.Optional
 import java.util.UUID
 
 class MatchingServiceImplTest : BehaviorSpec({
 
-    val matchingRepository = mockk<MatchingRepository>()
+    val matchingRepository = mockk<MatchingInvitationRepository>()
     val avatarService = mockk<AvatarService>()
     val sut = MatchingServiceImpl(matchingRepository, avatarService)
 
@@ -52,7 +55,7 @@ class MatchingServiceImplTest : BehaviorSpec({
                 every { avatarService.getAvatarById(inviterAvatarId) } returns null
 
                 val ex = shouldThrow<MatchingException> {
-                    sut.inviteMatching(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
+                    sut.createInvitation(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
                 }
 
                 ex.errorCode shouldBe MatchingErrorCode.NOT_FOUND_AVATAR
@@ -74,7 +77,7 @@ class MatchingServiceImplTest : BehaviorSpec({
                 every { avatarService.getAvatarById(inviterAvatarId) } returns inviterAvatar
 
                 val ex = shouldThrow<MatchingException> {
-                    sut.inviteMatching(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
+                    sut.createInvitation(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
                 }
 
                 ex.errorCode shouldBe MatchingErrorCode.NOT_AVATAR_OWNER
@@ -95,7 +98,7 @@ class MatchingServiceImplTest : BehaviorSpec({
                 every { avatarService.getAvatarById(inviteeAvatarId) } returns null
 
                 val ex = shouldThrow<MatchingException> {
-                    sut.inviteMatching(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
+                    sut.createInvitation(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
                 }
 
                 ex.errorCode shouldBe MatchingErrorCode.NOT_FOUND_AVATAR
@@ -133,11 +136,136 @@ class MatchingServiceImplTest : BehaviorSpec({
                 } returns listOf(inProgressInfo)
 
                 val ex = shouldThrow<MatchingException> {
-                    sut.inviteMatching(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
+                    sut.createInvitation(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
                 }
 
                 ex.errorCode shouldBe MatchingErrorCode.IN_PROGRESS_MATCHING
                 ex.message!! shouldContain inviterName
+            }
+        }
+    }
+
+    given("inviteMatching - invitee에게만 진행 중인 매칭이 있을 때") {
+        `when`("inviteMatching을 호출하면") {
+            then("IN_PROGRESS_MATCHING 예외가 발생하고 메시지에 inviteeAvatar.name이 포함된다") {
+                val memberId = UUID.randomUUID()
+                val inviterAvatarId = UUID.randomUUID()
+                val inviteeAvatarId = UUID.randomUUID()
+                val inviteeName = "피초대자아바타"
+
+                val inviterAvatar = mockAvatar(memberId = memberId, avatarId = inviterAvatarId, name = "초대자아바타")
+                val inviteeAvatar = mockAvatar(avatarId = inviteeAvatarId, name = inviteeName)
+
+                every { avatarService.getAvatarById(inviterAvatarId) } returns inviterAvatar
+                every { avatarService.getAvatarById(inviteeAvatarId) } returns inviteeAvatar
+
+                // inviteeAvatar가 다른 매칭에 invitee로 참여 중이고 inviterAvatar는 관여되지 않은 경우
+                val inProgressInfo = MatchingInvitationInfo(
+                    inviterAvatarId = UUID.randomUUID(),
+                    inviteeAvatarId = inviteeAvatarId,
+                    status = MatchingInvitationStatus.PENDING,
+                )
+                every {
+                    matchingRepository.findMatchingInfoByStatusesAndAvatars(
+                        statuses = MatchingInvitationStatus.getInProgressStatuses(),
+                        inviterAvatarId = inviterAvatar.id,
+                        inviteeAvatarId = inviteeAvatar.id,
+                    )
+                } returns listOf(inProgressInfo)
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.createInvitation(memberId, inviterAvatarId, inviteeAvatarId, "메시지")
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.IN_PROGRESS_MATCHING
+                ex.message!! shouldContain inviteeName
+            }
+        }
+    }
+
+    given("rejectInvitation - 매칭 초대를 찾을 수 없을 때") {
+        `when`("rejectInvitation을 호출하면") {
+            then("NOT_FOUND_MATCHING_INVITATION 예외가 발생한다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                every { matchingRepository.findById(invitationId) } returns Optional.empty()
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.rejectInvitation(memberId, invitationId, "거절메시지")
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION
+            }
+        }
+    }
+
+    given("rejectInvitation - 초대받은 사용자가 아닐 때") {
+        `when`("rejectInvitation을 호출하면") {
+            then("NOT_INVITATION_RECIPIENT 예외가 발생하고 reject는 호출되지 않는다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                val invitation = mockk<MatchingInvitation>()
+                every { invitation.isInvitee(memberId) } returns false
+                every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.rejectInvitation(memberId, invitationId, "거절메시지")
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.NOT_INVITATION_RECIPIENT
+                verify(exactly = 0) { invitation.reject(any()) }
+            }
+        }
+    }
+
+    given("rejectInvitation - 초대 상태가 PENDING이 아닐 때") {
+        listOf(
+            MatchingInvitationStatus.ACCEPTED to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED,
+            MatchingInvitationStatus.MATCHING  to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING,
+            MatchingInvitationStatus.REJECTED  to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED,
+            MatchingInvitationStatus.CANCELED  to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED,
+            MatchingInvitationStatus.ABORTED   to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED,
+            MatchingInvitationStatus.DONE      to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE,
+        ).forEach { (status, expectedErrorCode) ->
+            `when`("초대 상태가 $status 일 때 rejectInvitation을 호출하면") {
+                then("${expectedErrorCode.name} 예외가 발생한다") {
+                    val memberId = UUID.randomUUID()
+                    val invitationId = UUID.randomUUID()
+                    val invitation = MatchingInvitation(
+                        inviterAvatar = mockAvatar(),
+                        inviteeAvatar = mockAvatar(memberId = memberId),
+                        status = status,
+                        expiredAt = java.time.OffsetDateTime.now().plusDays(1),
+                    )
+                    every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                    val ex = shouldThrow<MatchingException> {
+                        sut.rejectInvitation(memberId, invitationId, "거절메시지")
+                    }
+
+                    ex.errorCode shouldBe expectedErrorCode
+                }
+            }
+        }
+    }
+
+    given("rejectInvitation - 정상적인 거절 요청일 때") {
+        `when`("rejectInvitation을 호출하면") {
+            then("invitation.reject가 rejectMessage와 함께 1회 호출된다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+                val rejectMessage = "아바타가 마음에 들지 않아요."
+
+                val invitation = mockk<MatchingInvitation>()
+                every { invitation.isInvitee(memberId) } returns true
+                every { invitation.reject(rejectMessage) } just Runs
+                every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                sut.rejectInvitation(memberId, invitationId, rejectMessage)
+
+                verify(exactly = 1) { invitation.reject(rejectMessage) }
             }
         }
     }
@@ -165,7 +293,7 @@ class MatchingServiceImplTest : BehaviorSpec({
                 val invitationSlot = slot<MatchingInvitation>()
                 every { matchingRepository.save(capture(invitationSlot)) } answers { firstArg() }
 
-                val result = sut.inviteMatching(memberId, inviterAvatarId, inviteeAvatarId, "안녕하세요")
+                val result = sut.createInvitation(memberId, inviterAvatarId, inviteeAvatarId, "안녕하세요")
 
                 // save가 정확히 1회 호출되어야 한다
                 verify(exactly = 1) { matchingRepository.save(any()) }

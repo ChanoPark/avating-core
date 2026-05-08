@@ -3,7 +3,7 @@ package com.chanos.avatingcore.matching.controller
 import com.chanos.avatingcore.auth.jwt.JwtProvider
 import com.chanos.avatingcore.auth.jwt.TokenType
 import com.chanos.avatingcore.global.security.JwtAuthenticationEntryPoint
-import com.chanos.avatingcore.matching.dto.response.MatchingInvitationResponse
+import com.chanos.avatingcore.matching.dto.response.CreateInvitationResponse
 import com.chanos.avatingcore.matching.exception.MatchingErrorCode
 import com.chanos.avatingcore.matching.exception.MatchingException
 import com.chanos.avatingcore.matching.service.MatchingService
@@ -12,8 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.jsonwebtoken.Claims
 import io.kotest.core.spec.style.BehaviorSpec
+import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -21,6 +23,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -78,17 +81,18 @@ class MatchingControllerTest : BehaviorSpec() {
                         val inviterAvatarId = UUID.randomUUID()
                         val inviteeAvatarId = UUID.randomUUID()
                         val expiredAt = OffsetDateTime.now().plusDays(1)
-                        val response = MatchingInvitationResponse.of(
+                        val response = CreateInvitationResponse.of(
+                            matchingInvitationId = UUID.randomUUID(),
                             inviterAvatarName = "초대자아바타",
                             inviteeAvatarName = "피초대자아바타",
                             status = MatchingInvitationStatus.PENDING,
                             expiredAt = expiredAt,
                         )
                         every {
-                            matchingService.inviteMatching(mockMemberId, inviterAvatarId, inviteeAvatarId, "안녕하세요, 매칭 신청합니다.")
+                            matchingService.createInvitation(mockMemberId, inviterAvatarId, inviteeAvatarId, "안녕하세요, 매칭 신청합니다.")
                         } returns response
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(
                                 buildRequestJson(
@@ -116,7 +120,7 @@ class MatchingControllerTest : BehaviorSpec() {
                             res.status = 401
                         }
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(buildRequestJson())
                         }.andExpect {
@@ -131,7 +135,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request가 반환된다") {
                         stubJwtAuthentication()
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(
                                 mapOf(
@@ -152,7 +156,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request가 반환된다") {
                         stubJwtAuthentication()
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(
                                 mapOf(
@@ -173,7 +177,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request가 반환된다") {
                         stubJwtAuthentication()
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(
                                 mapOf(
@@ -195,7 +199,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request가 반환된다") {
                         stubJwtAuthentication()
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(
                                 mapOf(
@@ -217,10 +221,10 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request와 MATCHING_400_001 코드가 반환된다") {
                         stubJwtAuthentication()
                         every {
-                            matchingService.inviteMatching(any(), any(), any(), any())
+                            matchingService.createInvitation(any(), any(), any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_AVATAR)
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(buildRequestJson())
                             header("Authorization", "Bearer mock.token")
@@ -237,10 +241,10 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request와 MATCHING_400_002 코드가 반환된다") {
                         stubJwtAuthentication()
                         every {
-                            matchingService.inviteMatching(any(), any(), any(), any())
+                            matchingService.createInvitation(any(), any(), any(), any())
                         } throws MatchingException.withArgs(MatchingErrorCode.IN_PROGRESS_MATCHING, "테스트아바타")
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(buildRequestJson())
                             header("Authorization", "Bearer mock.token")
@@ -257,16 +261,182 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("403 Forbidden과 MATCHING_403_001 코드가 반환된다") {
                         stubJwtAuthentication()
                         every {
-                            matchingService.inviteMatching(any(), any(), any(), any())
+                            matchingService.createInvitation(any(), any(), any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_AVATAR_OWNER)
 
-                        mockMvc.post("/api/matching/invite") {
+                        mockMvc.post("/api/matching/invitations") {
                             contentType = MediaType.APPLICATION_JSON
                             content = objectMapper.writeValueAsString(buildRequestJson())
                             header("Authorization", "Bearer mock.token")
                         }.andExpect {
                             status { isForbidden() }
                             jsonPath("$.code") { value("MATCHING_403_001") }
+                        }
+                    }
+                }
+            }
+        }
+
+        given("PATCH /api/matching/invitations/{invitationId}/reject") {
+
+            and("인증된 사용자가 유효한 요청을 보낼 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("200 OK가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+
+                        every {
+                            matchingService.rejectInvitation(mockMemberId, invitationId, "아바타가 마음에 들지 않아요.")
+                        } just Runs
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "아바타가 마음에 들지 않아요."))
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                        }
+                    }
+                }
+            }
+
+            and("인증 토큰 없이 요청할 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("401 Unauthorized가 반환된다") {
+                        val invitationId = UUID.randomUUID()
+                        every { jwtAuthenticationEntryPoint.commence(any(), any(), any()) } answers {
+                            val res = secondArg<jakarta.servlet.http.HttpServletResponse>()
+                            res.status = 401
+                        }
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "거절"))
+                        }.andExpect {
+                            status { isUnauthorized() }
+                        }
+                    }
+                }
+            }
+
+            and("rejectMessage가 빈 문자열인 요청일 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to ""))
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+
+            and("rejectMessage가 300자를 초과하는 요청일 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "a".repeat(301)))
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+
+            and("rejectMessage 필드가 없는 요청일 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(emptyMap<String, Any>())
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+
+            and("service가 NOT_FOUND_MATCHING_INVITATION 예외를 던질 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("400 Bad Request와 MATCHING_400_003 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.rejectInvitation(any(), any(), any())
+                        } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION)
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "거절메시지"))
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                            jsonPath("$.code") { value("MATCHING_400_003") }
+                        }
+                    }
+                }
+            }
+
+            and("service가 NOT_INVITATION_RECIPIENT 예외를 던질 때") {
+                `when`("PATCH 요청을 보내면") {
+                    then("403 Forbidden과 MATCHING_403_002 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.rejectInvitation(any(), any(), any())
+                        } throws MatchingException.of(MatchingErrorCode.NOT_INVITATION_RECIPIENT)
+
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "거절메시지"))
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isForbidden() }
+                            jsonPath("$.code") { value("MATCHING_403_002") }
+                        }
+                    }
+                }
+            }
+
+            and("service가 초대 상태 불일치로 거절 불가 예외를 던질 때") {
+                listOf(
+                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED to "MATCHING_400_004",
+                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING  to "MATCHING_400_005",
+                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED  to "MATCHING_400_006",
+                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED  to "MATCHING_400_007",
+                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED   to "MATCHING_400_008",
+                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE      to "MATCHING_400_009",
+                ).forEach { (errorCode, expectedCode) ->
+                    `when`("상태가 ${errorCode.name}일 때 PATCH 요청을 보내면") {
+                        then("400 Bad Request와 $expectedCode 코드가 반환된다") {
+                            stubJwtAuthentication()
+                            val invitationId = UUID.randomUUID()
+                            every {
+                                matchingService.rejectInvitation(any(), any(), any())
+                            } throws MatchingException.of(errorCode)
+
+                            mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                                contentType = MediaType.APPLICATION_JSON
+                                content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "거절메시지"))
+                                header("Authorization", "Bearer mock.token")
+                            }.andExpect {
+                                status { isBadRequest() }
+                                jsonPath("$.code") { value(expectedCode) }
+                            }
                         }
                     }
                 }

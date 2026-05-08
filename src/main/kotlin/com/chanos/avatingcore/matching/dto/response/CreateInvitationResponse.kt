@@ -3,8 +3,12 @@ package com.chanos.avatingcore.matching.dto.response
 import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.OffsetDateTime
+import java.util.UUID
 
-data class MatchingInvitationResponse(
+data class CreateInvitationResponse(
+    @Schema(description = "매칭 초대 ID", example = "123e4567-e89b-12d3-a456-426655440000")
+    val matchingInvitationId: UUID,
+
     @Schema(description = "초대한 아바타 이름", example = "test1")
     val inviterAvatarName: String,
 
@@ -19,10 +23,11 @@ data class MatchingInvitationResponse(
 ) {
     companion object {
         fun of(
+            matchingInvitationId: UUID,
             inviterAvatarName: String,
             inviteeAvatarName: String,
             status: MatchingInvitationStatus,
             expiredAt: OffsetDateTime,
-        ) = MatchingInvitationResponse(inviterAvatarName, inviteeAvatarName, status, expiredAt)
+        ) = CreateInvitationResponse(matchingInvitationId, inviterAvatarName, inviteeAvatarName, status, expiredAt)
     }
 }

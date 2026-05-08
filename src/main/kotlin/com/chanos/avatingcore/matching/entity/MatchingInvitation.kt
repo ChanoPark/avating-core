@@ -2,7 +2,10 @@ package com.chanos.avatingcore.matching.entity
 
 import com.chanos.avatingcore.avatar.entity.Avatar
 import com.chanos.avatingcore.global.entity.BaseUUIDEntity
+import com.chanos.avatingcore.matching.exception.MatchingErrorCode.*
+import com.chanos.avatingcore.matching.exception.MatchingException
 import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
+import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.*
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -12,6 +15,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @Entity
 @Table(name = "matching_invitations")
@@ -44,10 +48,31 @@ class MatchingInvitation(
             MatchingInvitation(
                 inviterAvatar = inviterAvatar,
                 inviteeAvatar = inviteeAvatar,
-                status = MatchingInvitationStatus.PENDING,
+                status = PENDING,
                 requestMessage = requestMessage,
                 rejectMessage = null,
                 expiredAt = OffsetDateTime.now().plusDays(1),
             )
+    }
+
+    /** 매칭 초대 거절 */
+    fun reject(rejectMessage: String) {
+        when (status) {
+            ACCEPTED  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED)
+            MATCHING  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING)
+            REJECTED  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED)
+            CANCELED  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED)
+            ABORTED   -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED)
+            DONE      -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE)
+            PENDING   -> {
+                this.rejectMessage = rejectMessage
+                this.status = REJECTED
+            }
+        }
+    }
+
+    /** 초대 받은 사용자 확인 */
+    fun isInvitee(memberId: UUID): Boolean {
+        return inviteeAvatar.member.id == memberId
     }
 }

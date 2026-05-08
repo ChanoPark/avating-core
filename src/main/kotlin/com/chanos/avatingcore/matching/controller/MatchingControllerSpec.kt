@@ -3,8 +3,9 @@ package com.chanos.avatingcore.matching.controller
 import com.chanos.avatingcore.global.response.ApiResponse
 import com.chanos.avatingcore.global.response.ErrorResponse
 import com.chanos.avatingcore.global.security.MemberPrincipal
-import com.chanos.avatingcore.matching.dto.request.MatchingInvitationRequest
-import com.chanos.avatingcore.matching.dto.response.MatchingInvitationResponse
+import com.chanos.avatingcore.matching.dto.request.CreateInvitationRequest
+import com.chanos.avatingcore.matching.dto.request.RejectInvitationRequest
+import com.chanos.avatingcore.matching.dto.response.CreateInvitationResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -14,7 +15,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
+import java.util.UUID
 
 @Tag(name = "Matching", description = "매칭 API")
 @SecurityRequirement(name = "bearer")
@@ -45,6 +48,36 @@ interface MatchingControllerSpec {
     )
     fun inviteMatching(
         @AuthenticationPrincipal principal: MemberPrincipal,
-        @RequestBody @Valid request: MatchingInvitationRequest,
-    ): ApiResponse<MatchingInvitationResponse>
+        @RequestBody @Valid request: CreateInvitationRequest,
+    ): ApiResponse<CreateInvitationResponse>
+
+    @Operation(
+        summary = "매칭 초대 거절",
+        description = "받은 매칭 초대를 거절합니다. 초대받은 아바타의 소유자만 거절할 수 있습니다. 인증이 필요합니다.",
+        security = [SecurityRequirement(name = "bearer")],
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "매칭 초대 거절 성공"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "매칭 초대 기록을 찾을 수 없거나 현재 상태에서 거절 불가 " +
+                "(MATCHING_400_003, MATCHING_400_004, MATCHING_400_005, MATCHING_400_006, MATCHING_400_007, MATCHING_400_008, MATCHING_400_009)",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "403",
+            description = "해당 초대의 수신자가 아님 (MATCHING_403_002)",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+    )
+    fun rejectMatchingInvitation(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @PathVariable invitationId: UUID,
+        @RequestBody @Valid request: RejectInvitationRequest,
+    ): ApiResponse<Unit>
 }
