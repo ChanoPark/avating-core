@@ -6,5 +6,5 @@ package com.chanos.avatingcore.global.exception
  */
 open class CommonException(
     val errorCode: ErrorCode,
-    message: String = errorCode.reason,
+    message: String = errorCode.message,
 ) : RuntimeException(message)

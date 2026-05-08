@@ -4,7 +4,7 @@ import com.chanos.avatingcore.global.exception.CommonException
 
 class MatchingException(
     errorCode: MatchingErrorCode,
-    message: String = errorCode.reason,
+    message: String = errorCode.message,
 ) : CommonException(errorCode, message) {
     companion object {
         fun of(errorCode: MatchingErrorCode): MatchingException = MatchingException(errorCode)

@@ -4,11 +4,11 @@ import com.chanos.avatingcore.global.exception.CommonException
 
 class AuthException(
     errorCode: AuthErrorCode,
-    message: String = errorCode.reason,
+    message: String = errorCode.message,
 ) : CommonException(errorCode, message) {
     companion object {
         fun of(errorCode: AuthErrorCode): AuthException {
-            return of(errorCode, errorCode.reason)
+            return of(errorCode, errorCode.message)
         }
 
         fun of(errorCode: AuthErrorCode, message: String): AuthException {
