@@ -173,6 +173,9 @@ class AvatarServiceImpl(
             avatarRepository.findSummaryByIdWithPersona(avatarId, memberId) ?: throw AvatarException.of(NOT_FOUND_AVATAR)
         )
 
+    override fun getAvatarById(avatarId: UUID): Avatar? =
+        avatarRepository.findById(avatarId).orElse(null)
+
     /** 요청 받은 답변이 존재하는 답변인지 확인 후 반환 */
     private fun getAnswersFromRequest(requestAnswers: List<SurveyAnswerRequest>): List<SurveyQuestionAnswer> {
         val requestAnswerIds = requestAnswers.map { it.answerId }

@@ -24,7 +24,7 @@ class GlobalExceptionHandler {
         logger.debug("[{}] {}", errorCode.code, e.message ?: errorCode.reason)
         return ResponseEntity
             .status(errorCode.status)
-            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
+            .body(ErrorResponse.of(code = errorCode.code, message = e.message ?: errorCode.message))
     }
 
     /** Bean Validation 실패 */
