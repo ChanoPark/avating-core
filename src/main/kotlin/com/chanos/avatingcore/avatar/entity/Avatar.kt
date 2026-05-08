@@ -2,7 +2,7 @@ package com.chanos.avatingcore.avatar.entity
 
 import com.chanos.avatingcore.avatar.entity.enums.AvatarType
 import com.chanos.avatingcore.avatar.entity.enums.SourceType
-import com.chanos.avatingcore.global.entity.BaseEntity
+import com.chanos.avatingcore.global.entity.BaseUUIDEntity
 import com.chanos.avatingcore.matching.entity.MatchingInvitation
 import com.chanos.avatingcore.member.entity.Member
 import jakarta.persistence.CascadeType
@@ -11,15 +11,11 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.Version
-import java.util.UUID
 
 @Entity
 @Table(name = "avatars")
@@ -44,12 +40,7 @@ class Avatar(
 
     @Column(name = "is_primary", nullable = false)
     var isPrimary: Boolean = false,
-) : BaseEntity() {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    val id: UUID? = null
+) : BaseUUIDEntity() {
 
     @OneToMany(mappedBy = "inviterAvatar", cascade = [CascadeType.ALL], orphanRemoval = true)
     val sentInvitations: MutableList<MatchingInvitation> = mutableListOf()

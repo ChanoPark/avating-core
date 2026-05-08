@@ -120,15 +120,15 @@ class MatchingServiceImplTest : BehaviorSpec({
 
                 // inviterAvatar가 inviter로 진행 중인 매칭이 있는 경우
                 val inProgressInfo = MatchingInvitationInfo(
-                    inviterAvatarId = inviterAvatar,
-                    inviteeAvatarId = inviteeAvatar,
+                    inviterAvatarId = inviterAvatar.id,
+                    inviteeAvatarId = inviteeAvatar.id,
                     status = MatchingInvitationStatus.PENDING,
                 )
                 every {
                     matchingRepository.findMatchingInfoByStatusesAndAvatars(
                         statuses = MatchingInvitationStatus.getInProgressStatuses(),
-                        inviterAvatarId = inviterAvatar,
-                        inviteeAvatarId = inviteeAvatar,
+                        inviterAvatarId = inviterAvatar.id,
+                        inviteeAvatarId = inviteeAvatar.id,
                     )
                 } returns listOf(inProgressInfo)
 
@@ -157,8 +157,8 @@ class MatchingServiceImplTest : BehaviorSpec({
                 every {
                     matchingRepository.findMatchingInfoByStatusesAndAvatars(
                         statuses = MatchingInvitationStatus.getInProgressStatuses(),
-                        inviterAvatarId = inviterAvatar,
-                        inviteeAvatarId = inviteeAvatar,
+                        inviterAvatarId = inviterAvatar.id,
+                        inviteeAvatarId = inviteeAvatar.id,
                     )
                 } returns emptyList()
 
@@ -170,9 +170,9 @@ class MatchingServiceImplTest : BehaviorSpec({
                 // save가 정확히 1회 호출되어야 한다
                 verify(exactly = 1) { matchingRepository.save(any()) }
 
-                // Bug #2 회귀 방지: inviteeAvatar.id 가 올바르게 저장되었는지 검증
-                invitationSlot.captured.inviteeAvatar.id shouldBe inviteeAvatarId
-                invitationSlot.captured.inviterAvatar.id shouldBe inviterAvatarId
+                // Bug #2 회귀 방지: 올바른 inviter/invitee avatar 가 저장되었는지 검증
+                invitationSlot.captured.inviteeAvatar shouldBe inviteeAvatar
+                invitationSlot.captured.inviterAvatar shouldBe inviterAvatar
 
                 // 응답 status가 PENDING이어야 한다
                 result.status shouldBe MatchingInvitationStatus.PENDING

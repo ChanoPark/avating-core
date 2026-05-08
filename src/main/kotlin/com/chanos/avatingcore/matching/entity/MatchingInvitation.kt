@@ -1,21 +1,17 @@
 package com.chanos.avatingcore.matching.entity
 
 import com.chanos.avatingcore.avatar.entity.Avatar
-import com.chanos.avatingcore.global.entity.BaseEntity
+import com.chanos.avatingcore.global.entity.BaseUUIDEntity
 import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import java.time.OffsetDateTime
-import java.util.UUID
 
 @Entity
 @Table(name = "matching_invitations")
@@ -41,11 +37,7 @@ class MatchingInvitation(
     @Column(name = "expired_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
     var expiredAt: OffsetDateTime
 
-) : BaseEntity() {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    val id: UUID? = null
+) : BaseUUIDEntity() {
 
     companion object {
         fun createInvitation(inviterAvatar: Avatar, inviteeAvatar: Avatar, requestMessage: String? = null) =

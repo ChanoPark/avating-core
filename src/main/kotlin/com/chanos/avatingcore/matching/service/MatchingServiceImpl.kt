@@ -61,8 +61,8 @@ class MatchingServiceImpl(
     private fun checkInProgressMatching(inviterAvatar: Avatar, inviteeAvatar: Avatar) {
         val inProgressMatching: List<MatchingInvitationInfo> = matchingRepository.findMatchingInfoByStatusesAndAvatars(
             statuses = MatchingInvitationStatus.getInProgressStatuses(),
-            inviterAvatarId = inviterAvatar.id!!,
-            inviteeAvatarId = inviteeAvatar.id!!,
+            inviterAvatarId = inviterAvatar.id,
+            inviteeAvatarId = inviteeAvatar.id,
         )
 
         if (inProgressMatching.isEmpty()) return

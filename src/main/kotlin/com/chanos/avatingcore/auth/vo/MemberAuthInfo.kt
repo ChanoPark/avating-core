@@ -16,7 +16,7 @@ data class MemberAuthInfo(
         }
 
         fun fromMember(member: Member): MemberAuthInfo {
-            return of(member.email, member.id!!, member.password)
+            return of(member.email, member.id, member.password)
         }
     }
 }
