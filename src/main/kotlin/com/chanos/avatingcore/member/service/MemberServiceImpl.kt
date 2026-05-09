@@ -1,6 +1,7 @@
 package com.chanos.avatingcore.member.service
 
 import com.chanos.avatingcore.auth.vo.MemberAuthInfo
+import com.chanos.avatingcore.global.util.logger
 import com.chanos.avatingcore.member.entity.Member
 import com.chanos.avatingcore.member.exception.MemberErrorCode
 import com.chanos.avatingcore.member.exception.MemberException
@@ -13,6 +14,7 @@ import java.util.UUID
 class MemberServiceImpl(
     private val memberRepository: MemberRepository,
 ) : MemberService {
+    private val log = logger()
 
     override fun validateNewMember(email: String, nickname: String) {
         if (existEmail(email)) throw MemberException(MemberErrorCode.DUPLICATE_EMAIL)
@@ -24,6 +26,8 @@ class MemberServiceImpl(
         val member: Member = memberRepository.save(
             Member(email = email, password = hashedPassword, nickname = nickname)
         )
+
+        log.debug("member_created member={}", member)
 
         return MemberAuthInfo.fromMember(member)
     }

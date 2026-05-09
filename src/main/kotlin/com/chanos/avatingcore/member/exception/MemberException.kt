@@ -4,5 +4,5 @@ import com.chanos.avatingcore.global.exception.CommonException
 
 class MemberException(
     errorCode: MemberErrorCode,
-    message: String = errorCode.reason,
+    message: String = errorCode.message,
 ) : CommonException(errorCode, message)

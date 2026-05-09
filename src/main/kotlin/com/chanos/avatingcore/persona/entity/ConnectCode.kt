@@ -1,14 +1,11 @@
 package com.chanos.avatingcore.persona.entity
 
-import com.chanos.avatingcore.global.entity.BaseEntity
+import com.chanos.avatingcore.global.entity.BaseUUIDEntity
 import com.chanos.avatingcore.persona.vo.ConnectCodeStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.util.UUID
 
@@ -21,12 +18,7 @@ class ConnectCode(
     @Column(name = "connect_code", nullable = false)
     var connectCode: String,
 
-) : BaseEntity() {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    val id: UUID? = null
+) : BaseUUIDEntity() {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "connect_code_status", nullable = false, length = 20)

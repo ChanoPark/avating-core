@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.ServletRequestBindingException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -21,10 +22,10 @@ class GlobalExceptionHandler {
     @ExceptionHandler(CommonException::class)
     fun handleBusinessException(e: CommonException): ResponseEntity<ErrorResponse> {
         val errorCode = e.errorCode
-        logger.debug("[{}] {}", errorCode.code, e.message ?: errorCode.reason)
+        logger.debug("[{}] {}", errorCode.code, errorCode.reason)
         return ResponseEntity
             .status(errorCode.status)
-            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
+            .body(ErrorResponse.of(code = errorCode.code, message = e.message ?: errorCode.message))
     }
 
     /** Bean Validation 실패 */
@@ -43,7 +44,8 @@ class GlobalExceptionHandler {
     /** JSON 파싱 실패 (필드 누락, 타입 불일치 등) */
     @ExceptionHandler(
         ServletRequestBindingException::class,
-        HttpMessageNotReadableException::class
+        HttpMessageNotReadableException::class,
+        IllegalArgumentException::class,
     )
     fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
         val errorCode = CommonErrorCode.INVALID_INPUT
@@ -81,6 +83,16 @@ class GlobalExceptionHandler {
     fun handleNoResourceFoundException(e: NoResourceFoundException): ResponseEntity<ErrorResponse> {
         val errorCode = CommonErrorCode.NOT_FOUND
         logger.debug("[{}] no_resource_found: {}", errorCode.code, e.message)
+        return ResponseEntity
+            .status(errorCode.status)
+            .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
+    }
+
+    /** 지원하지 않는 HTTP Method */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotSupportedException(e: HttpRequestMethodNotSupportedException): ResponseEntity<ErrorResponse> {
+        val errorCode = CommonErrorCode.NOT_FOUND
+        logger.debug("[{}] no_support_http_method: {}", errorCode.code, e.message)
         return ResponseEntity
             .status(errorCode.status)
             .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))

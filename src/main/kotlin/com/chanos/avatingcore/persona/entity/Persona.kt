@@ -1,21 +1,17 @@
 package com.chanos.avatingcore.persona.entity
 
 import com.chanos.avatingcore.avatar.entity.Avatar
-import com.chanos.avatingcore.global.entity.BaseEntity
+import com.chanos.avatingcore.global.entity.BaseUUIDEntity
 import com.chanos.avatingcore.persona.vo.PersonaStatType
 import com.chanos.avatingcore.persona.vo.PersonaStatType.*
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import java.util.UUID
 
 @Entity
 @Table(name = "personas")
@@ -48,12 +44,7 @@ class Persona(
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "frequent_expressions", columnDefinition = "jsonb", nullable = false)
     val frequentExpressions: List<String> = emptyList(),
-) : BaseEntity() {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    val id: UUID? = null
+) : BaseUUIDEntity() {
 
     companion object {
         fun of(

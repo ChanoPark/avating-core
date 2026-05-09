@@ -3,6 +3,7 @@ package com.chanos.avatingcore.avatar.service
 import com.chanos.avatingcore.avatar.dto.request.GptsAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.request.SurveyAvatarCreateRequest
 import com.chanos.avatingcore.avatar.dto.response.AvatarSummaryResponse
+import com.chanos.avatingcore.avatar.entity.Avatar
 import java.util.UUID
 
 interface AvatarService {
@@ -38,4 +39,10 @@ interface AvatarService {
      * @param avatarId 조회 대상 아바타 ID
      */
     fun getAvatarSummary(memberId: UUID, avatarId: UUID): AvatarSummaryResponse
+
+    /**
+     * 아바타 조회
+     * @param avatarId 아바타 ID
+     */
+    fun getAvatarById(avatarId: UUID): Avatar?
 }
