@@ -413,30 +413,24 @@ class MatchingControllerTest : BehaviorSpec() {
             }
 
             and("service가 초대 상태 불일치로 거절 불가 예외를 던질 때") {
-                listOf(
-                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED to "MATCHING_400_004",
-                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING  to "MATCHING_400_005",
-                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED  to "MATCHING_400_006",
-                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED  to "MATCHING_400_007",
-                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED   to "MATCHING_400_008",
-                    MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE      to "MATCHING_400_009",
-                ).forEach { (errorCode, expectedCode) ->
-                    `when`("상태가 ${errorCode.name}일 때 PATCH 요청을 보내면") {
-                        then("400 Bad Request와 $expectedCode 코드가 반환된다") {
-                            stubJwtAuthentication()
-                            val invitationId = UUID.randomUUID()
-                            every {
-                                matchingService.rejectInvitation(any(), any(), any())
-                            } throws MatchingException.of(errorCode)
+                `when`("PATCH 요청을 보내면") {
+                    then("400 Bad Request와 MATCHING_400_004 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.rejectInvitation(any(), any(), any())
+                        } throws MatchingException.forInvalidInvitationStatus(
+                            MatchingInvitationStatus.ACCEPTED,
+                            com.chanos.avatingcore.matching.vo.MatchingAction.REJECT,
+                        )
 
-                            mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
-                                contentType = MediaType.APPLICATION_JSON
-                                content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "거절메시지"))
-                                header("Authorization", "Bearer mock.token")
-                            }.andExpect {
-                                status { isBadRequest() }
-                                jsonPath("$.code") { value(expectedCode) }
-                            }
+                        mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
+                            contentType = MediaType.APPLICATION_JSON
+                            content = objectMapper.writeValueAsString(mapOf("rejectMessage" to "거절메시지"))
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                            jsonPath("$.code") { value("MATCHING_400_004") }
                         }
                     }
                 }
@@ -520,28 +514,121 @@ class MatchingControllerTest : BehaviorSpec() {
             }
 
             and("service가 초대 상태 불일치로 취소 불가 예외를 던질 때") {
-                listOf(
-                    MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_ACCEPTED to "MATCHING_400_010",
-                    MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_MATCHING  to "MATCHING_400_011",
-                    MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_REJECTED  to "MATCHING_400_012",
-                    MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_CANCELED  to "MATCHING_400_013",
-                    MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_ABORTED   to "MATCHING_400_014",
-                    MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_DONE      to "MATCHING_400_015",
-                ).forEach { (errorCode, expectedCode) ->
-                    `when`("상태가 ${errorCode.name}일 때 PATCH 요청을 보내면") {
-                        then("400 Bad Request와 $expectedCode 코드가 반환된다") {
-                            stubJwtAuthentication()
-                            val invitationId = UUID.randomUUID()
-                            every {
-                                matchingService.cancelInvitation(any(), any())
-                            } throws MatchingException.of(errorCode)
+                `when`("PATCH 요청을 보내면") {
+                    then("400 Bad Request와 MATCHING_400_004 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.cancelInvitation(any(), any())
+                        } throws MatchingException.forInvalidInvitationStatus(
+                            MatchingInvitationStatus.ACCEPTED,
+                            com.chanos.avatingcore.matching.vo.MatchingAction.CANCEL,
+                        )
 
-                            mockMvc.patch("/api/matching/invitations/$invitationId/cancel") {
-                                header("Authorization", "Bearer mock.token")
-                            }.andExpect {
-                                status { isBadRequest() }
-                                jsonPath("$.code") { value(expectedCode) }
+                        mockMvc.patch("/api/matching/invitations/$invitationId/cancel") {
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                            jsonPath("$.code") { value("MATCHING_400_004") }
+                        }
+                    }
+                }
+            }
+        }
+
+        given("POST /api/matching/invitations/{invitationId}/accept") {
+
+            and("인증된 사용자가 유효한 요청을 보낼 때") {
+                `when`("POST 요청을 보내면") {
+                    then("201 Created가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+
+                        every {
+                            matchingService.acceptInvitation(mockMemberId, invitationId)
+                        } just Runs
+
+                        mockMvc.post("/api/matching/invitations/$invitationId/accept") {
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isCreated() }
+                        }
+                    }
+                }
+            }
+
+            and("인증 토큰 없이 요청할 때") {
+                `when`("POST 요청을 보내면") {
+                    then("401 Unauthorized가 반환된다") {
+                        val invitationId = UUID.randomUUID()
+                        every { jwtAuthenticationEntryPoint.commence(any(), any(), any()) } answers {
+                            val res = secondArg<jakarta.servlet.http.HttpServletResponse>()
+                            res.status = 401
+                        }
+
+                        mockMvc.post("/api/matching/invitations/$invitationId/accept")
+                            .andExpect {
+                                status { isUnauthorized() }
                             }
+                    }
+                }
+            }
+
+            and("service가 NOT_FOUND_MATCHING_INVITATION 예외를 던질 때") {
+                `when`("POST 요청을 보내면") {
+                    then("400 Bad Request와 MATCHING_400_003 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.acceptInvitation(any(), any())
+                        } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION)
+
+                        mockMvc.post("/api/matching/invitations/$invitationId/accept") {
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                            jsonPath("$.code") { value("MATCHING_400_003") }
+                        }
+                    }
+                }
+            }
+
+            and("service가 NOT_INVITATION_RECIPIENT 예외를 던질 때") {
+                `when`("POST 요청을 보내면") {
+                    then("403 Forbidden과 MATCHING_403_003 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.acceptInvitation(any(), any())
+                        } throws MatchingException.of(MatchingErrorCode.NOT_INVITATION_RECIPIENT)
+
+                        mockMvc.post("/api/matching/invitations/$invitationId/accept") {
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isForbidden() }
+                            jsonPath("$.code") { value("MATCHING_403_003") }
+                        }
+                    }
+                }
+            }
+
+            and("service가 초대 상태 불일치로 수락 불가 예외를 던질 때") {
+                `when`("POST 요청을 보내면") {
+                    then("400 Bad Request와 MATCHING_400_004 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        val invitationId = UUID.randomUUID()
+                        every {
+                            matchingService.acceptInvitation(any(), any())
+                        } throws MatchingException.forInvalidInvitationStatus(
+                            MatchingInvitationStatus.ACCEPTED,
+                            com.chanos.avatingcore.matching.vo.MatchingAction.ACCEPT,
+                        )
+
+                        mockMvc.post("/api/matching/invitations/$invitationId/accept") {
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                            jsonPath("$.code") { value("MATCHING_400_004") }
                         }
                     }
                 }

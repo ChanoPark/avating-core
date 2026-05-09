@@ -21,6 +21,13 @@ interface MatchingService {
     ): CreateInvitationResponse
 
     /**
+     * 매칭 초대 수락
+     * @param memberId memberId
+     * @param invitationId invitationId
+     */
+    fun acceptInvitation(memberId: UUID, invitationId: UUID)
+
+    /**
      * 매칭 초대 거절
      * @param memberId memberId
      * @param invitationId invitationId

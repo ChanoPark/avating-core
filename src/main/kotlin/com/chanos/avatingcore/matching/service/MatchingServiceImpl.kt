@@ -57,13 +57,16 @@ class MatchingServiceImpl(
     }
 
     @Transactional(readOnly = false)
-    override fun rejectInvitation(memberId: UUID, invitationId: UUID, rejectMessage: String) {
-        val invitation: MatchingInvitation = matchingInvitationRepository.findById(invitationId)
-            .orElseThrow { MatchingException.of(NOT_FOUND_MATCHING_INVITATION) }
+    override fun acceptInvitation(memberId: UUID, invitationId: UUID) {
+        val invitation: MatchingInvitation = getInvitedInvitation(invitationId, memberId)
 
-        if (!invitation.isInvitee(memberId)) {
-            throw MatchingException.of(NOT_INVITATION_RECIPIENT)
-        }
+        invitation.accept()
+        log.debug("matching_invitation_accepted invitationId={}", invitationId)
+    }
+
+    @Transactional(readOnly = false)
+    override fun rejectInvitation(memberId: UUID, invitationId: UUID, rejectMessage: String) {
+        val invitation: MatchingInvitation = getInvitedInvitation(invitationId, memberId)
 
         invitation.reject(rejectMessage)
         log.debug("matching_invitation_rejected invitationId={}", invitationId)
@@ -80,6 +83,18 @@ class MatchingServiceImpl(
 
         invitation.cancel()
         log.debug("matching_invitation_canceled invitationId={}", invitationId)
+    }
+
+    /** 초대 받은 매칭 조회 */
+    private fun getInvitedInvitation(invitationId: UUID, memberId: UUID): MatchingInvitation {
+        val invitation: MatchingInvitation = matchingInvitationRepository.findById(invitationId)
+            .orElseThrow { MatchingException.of(NOT_FOUND_MATCHING_INVITATION) }
+
+        if (!invitation.isInvitee(memberId)) {
+            throw MatchingException.of(NOT_INVITATION_RECIPIENT)
+        }
+
+        return invitation
     }
 
     /** 진행 중인 매칭이 있으면 예외 처리 */

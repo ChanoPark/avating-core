@@ -183,6 +183,96 @@ class MatchingServiceImplTest : BehaviorSpec({
         }
     }
 
+    given("acceptInvitation - 매칭 초대를 찾을 수 없을 때") {
+        `when`("acceptInvitation을 호출하면") {
+            then("NOT_FOUND_MATCHING_INVITATION 예외가 발생한다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                every { matchingRepository.findById(invitationId) } returns Optional.empty()
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.acceptInvitation(memberId, invitationId)
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION
+            }
+        }
+    }
+
+    given("acceptInvitation - 초대받은 사용자가 아닐 때") {
+        `when`("acceptInvitation을 호출하면") {
+            then("NOT_INVITATION_RECIPIENT 예외가 발생하고 accept는 호출되지 않는다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                val invitation = mockk<MatchingInvitation>()
+                every { invitation.isInvitee(memberId) } returns false
+                every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.acceptInvitation(memberId, invitationId)
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.NOT_INVITATION_RECIPIENT
+                verify(exactly = 0) { invitation.accept() }
+            }
+        }
+    }
+
+    given("acceptInvitation - 초대 상태가 PENDING이 아닐 때") {
+        listOf(
+            MatchingInvitationStatus.ACCEPTED to "이미 수락된",
+            MatchingInvitationStatus.MATCHING  to "진행 중인",
+            MatchingInvitationStatus.REJECTED  to "이미 거절된",
+            MatchingInvitationStatus.CANCELED  to "이미 취소된",
+            MatchingInvitationStatus.ABORTED   to "무효화된",
+            MatchingInvitationStatus.DONE      to "완료된",
+        ).forEach { (status, statusLabel) ->
+            `when`("초대 상태가 $status 일 때 acceptInvitation을 호출하면") {
+                then("INVALID_MATCHING_INVITATION_STATUS 예외가 발생하고 메시지에 상태와 액션이 포함된다") {
+                    val memberId = UUID.randomUUID()
+                    val invitationId = UUID.randomUUID()
+                    val invitation = MatchingInvitation(
+                        inviterAvatar = mockAvatar(),
+                        inviteeAvatar = mockAvatar(memberId = memberId),
+                        status = status,
+                        expiredAt = java.time.OffsetDateTime.now().plusDays(1),
+                    )
+                    every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                    val ex = shouldThrow<MatchingException> {
+                        sut.acceptInvitation(memberId, invitationId)
+                    }
+
+                    ex.errorCode shouldBe MatchingErrorCode.INVALID_MATCHING_INVITATION_STATUS
+                    ex.message shouldBe "$statusLabel 매칭은 수락할 수 없습니다."
+                }
+            }
+        }
+    }
+
+    given("acceptInvitation - 정상적인 수락 요청일 때") {
+        `when`("acceptInvitation을 호출하면") {
+            then("invitation.accept가 1회 호출되고 상태가 ACCEPTED로 변경된다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                val invitation = MatchingInvitation(
+                    inviterAvatar = mockAvatar(),
+                    inviteeAvatar = mockAvatar(memberId = memberId),
+                    status = MatchingInvitationStatus.PENDING,
+                    expiredAt = java.time.OffsetDateTime.now().plusDays(1),
+                )
+                every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                sut.acceptInvitation(memberId, invitationId)
+
+                invitation.status shouldBe MatchingInvitationStatus.ACCEPTED
+            }
+        }
+    }
+
     given("rejectInvitation - 매칭 초대를 찾을 수 없을 때") {
         `when`("rejectInvitation을 호출하면") {
             then("NOT_FOUND_MATCHING_INVITATION 예외가 발생한다") {
@@ -222,15 +312,15 @@ class MatchingServiceImplTest : BehaviorSpec({
 
     given("rejectInvitation - 초대 상태가 PENDING이 아닐 때") {
         listOf(
-            MatchingInvitationStatus.ACCEPTED to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED,
-            MatchingInvitationStatus.MATCHING  to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING,
-            MatchingInvitationStatus.REJECTED  to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED,
-            MatchingInvitationStatus.CANCELED  to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED,
-            MatchingInvitationStatus.ABORTED   to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED,
-            MatchingInvitationStatus.DONE      to MatchingErrorCode.FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE,
-        ).forEach { (status, expectedErrorCode) ->
+            MatchingInvitationStatus.ACCEPTED to "이미 수락된",
+            MatchingInvitationStatus.MATCHING  to "진행 중인",
+            MatchingInvitationStatus.REJECTED  to "이미 거절된",
+            MatchingInvitationStatus.CANCELED  to "이미 취소된",
+            MatchingInvitationStatus.ABORTED   to "무효화된",
+            MatchingInvitationStatus.DONE      to "완료된",
+        ).forEach { (status, statusLabel) ->
             `when`("초대 상태가 $status 일 때 rejectInvitation을 호출하면") {
-                then("${expectedErrorCode.name} 예외가 발생한다") {
+                then("INVALID_MATCHING_INVITATION_STATUS 예외가 발생하고 메시지에 상태와 액션이 포함된다") {
                     val memberId = UUID.randomUUID()
                     val invitationId = UUID.randomUUID()
                     val invitation = MatchingInvitation(
@@ -245,7 +335,8 @@ class MatchingServiceImplTest : BehaviorSpec({
                         sut.rejectInvitation(memberId, invitationId, "거절메시지")
                     }
 
-                    ex.errorCode shouldBe expectedErrorCode
+                    ex.errorCode shouldBe MatchingErrorCode.INVALID_MATCHING_INVITATION_STATUS
+                    ex.message shouldBe "$statusLabel 매칭은 거절할 수 없습니다."
                 }
             }
         }
@@ -309,15 +400,15 @@ class MatchingServiceImplTest : BehaviorSpec({
 
     given("cancelInvitation - 초대 상태가 PENDING이 아닐 때") {
         listOf(
-            MatchingInvitationStatus.ACCEPTED to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_ACCEPTED,
-            MatchingInvitationStatus.MATCHING  to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_MATCHING,
-            MatchingInvitationStatus.REJECTED  to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_REJECTED,
-            MatchingInvitationStatus.CANCELED  to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_CANCELED,
-            MatchingInvitationStatus.ABORTED   to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_ABORTED,
-            MatchingInvitationStatus.DONE      to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_DONE,
-        ).forEach { (status, expectedErrorCode) ->
+            MatchingInvitationStatus.ACCEPTED to "이미 수락된",
+            MatchingInvitationStatus.MATCHING  to "진행 중인",
+            MatchingInvitationStatus.REJECTED  to "이미 거절된",
+            MatchingInvitationStatus.CANCELED  to "이미 취소된",
+            MatchingInvitationStatus.ABORTED   to "무효화된",
+            MatchingInvitationStatus.DONE      to "완료된",
+        ).forEach { (status, statusLabel) ->
             `when`("초대 상태가 $status 일 때 cancelInvitation을 호출하면") {
-                then("${expectedErrorCode.name} 예외가 발생한다") {
+                then("INVALID_MATCHING_INVITATION_STATUS 예외가 발생하고 메시지에 상태와 액션이 포함된다") {
                     val memberId = UUID.randomUUID()
                     val invitationId = UUID.randomUUID()
                     val invitation = MatchingInvitation(
@@ -332,7 +423,8 @@ class MatchingServiceImplTest : BehaviorSpec({
                         sut.cancelInvitation(memberId, invitationId)
                     }
 
-                    ex.errorCode shouldBe expectedErrorCode
+                    ex.errorCode shouldBe MatchingErrorCode.INVALID_MATCHING_INVITATION_STATUS
+                    ex.message shouldBe "$statusLabel 매칭은 취소할 수 없습니다."
                 }
             }
         }

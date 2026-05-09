@@ -31,88 +31,11 @@ enum class MatchingErrorCode(
         reason = "Not found matching invitation",
     ),
 
-    FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED(
+    INVALID_MATCHING_INVITATION_STATUS(
         status = HttpStatus.BAD_REQUEST,
         code = "MATCHING_400_004",
-        message = "수락된 매칭은 거절할 수 없습니다.",
-        reason = "Reject is failed because the matching status is accepted",
-    ),
-
-    FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_005",
-        message = "진행 중인 매칭은 거절할 수 없습니다.",
-        reason = "Reject is failed because the matching status is in progress",
-    ),
-
-    FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_006",
-        message = "이미 거절된 매칭 요청입니다.",
-        reason = "Reject is failed because the matching status is rejected",
-    ),
-
-    FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_007",
-        message = "취소된 매칭은 거절할 수 없습니다.",
-        reason = "Reject is failed because the matching status is canceled",
-    ),
-
-    FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_008",
-        message = "무효화된 매칭은 거절할 수 없습니다.",
-        reason = "Reject is failed because the matching status is aborted",
-    ),
-
-    FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_009",
-        message = "완료된 매칭은 거절할 수 없습니다.",
-        reason = "Reject is failed because the matching status is done",
-    ),
-
-    FAILED_CANCEL_MATCHING_INVITATION_STATUS_ACCEPTED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_010",
-        message = "수락된 매칭은 취소할 수 없습니다.",
-        reason = "Cancel is failed because the matching status is accepted",
-    ),
-
-    FAILED_CANCEL_MATCHING_INVITATION_STATUS_MATCHING(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_011",
-        message = "진행 중인 매칭은 취소할 수 없습니다.",
-        reason = "Cancel is failed because the matching status is in progress",
-    ),
-
-    FAILED_CANCEL_MATCHING_INVITATION_STATUS_REJECTED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_012",
-        message = "거절된 매칭은 취소할 수 없습니다.",
-        reason = "Cancel is failed because the matching status is rejected",
-    ),
-
-    FAILED_CANCEL_MATCHING_INVITATION_STATUS_CANCELED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_013",
-        message = "이미 취소된 매칭 요청입니다.",
-        reason = "Cancel is failed because the matching status is canceled",
-    ),
-
-    FAILED_CANCEL_MATCHING_INVITATION_STATUS_ABORTED(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_014",
-        message = "무효화된 매칭은 취소할 수 없습니다.",
-        reason = "Cancel is failed because the matching status is aborted",
-    ),
-
-    FAILED_CANCEL_MATCHING_INVITATION_STATUS_DONE(
-        status = HttpStatus.BAD_REQUEST,
-        code = "MATCHING_400_015",
-        message = "완료된 매칭은 취소할 수 없습니다.",
-        reason = "Cancel is failed because the matching status is done",
+        message = "%s 매칭은 %s할 수 없습니다.",
+        reason = "Status transition is not allowed",
     ),
 
     NOT_AVATAR_OWNER(

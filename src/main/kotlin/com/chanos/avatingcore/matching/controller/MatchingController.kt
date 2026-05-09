@@ -40,6 +40,16 @@ class MatchingController(
         ))
     }
 
+    @PostMapping("/invitations/{invitationId}/accept")
+    @ResponseStatus(HttpStatus.CREATED)
+    override fun acceptMatchingInvitation(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @PathVariable invitationId: UUID,
+    ): ApiResponse<Unit> {
+        matchingService.acceptInvitation(principal.memberId, invitationId)
+        return ApiResponse.of(Unit)
+    }
+
     @PatchMapping("/invitations/{invitationId}/reject")
     override fun rejectMatchingInvitation(
         @AuthenticationPrincipal principal: MemberPrincipal,

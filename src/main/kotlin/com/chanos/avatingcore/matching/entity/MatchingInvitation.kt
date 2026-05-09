@@ -2,10 +2,13 @@ package com.chanos.avatingcore.matching.entity
 
 import com.chanos.avatingcore.avatar.entity.Avatar
 import com.chanos.avatingcore.global.entity.BaseUUIDEntity
-import com.chanos.avatingcore.matching.exception.MatchingErrorCode.*
 import com.chanos.avatingcore.matching.exception.MatchingException
+import com.chanos.avatingcore.matching.vo.MatchingAction
 import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.*
+import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.ACCEPTED
+import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.CANCELED
+import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.PENDING
+import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.REJECTED
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -55,33 +58,29 @@ class MatchingInvitation(
             )
     }
 
+    /** 매칭 초대 수락 */
+    fun accept() {
+        if (status != PENDING) {
+            throw MatchingException.forInvalidInvitationStatus(status, MatchingAction.ACCEPT)
+        }
+        this.status = ACCEPTED
+    }
+
     /** 매칭 초대 거절 */
     fun reject(rejectMessage: String) {
-        when (status) {
-            ACCEPTED  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_ACCEPTED)
-            MATCHING  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_MATCHING)
-            REJECTED  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_REJECTED)
-            CANCELED  -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_CANCELED)
-            ABORTED   -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_ABORTED)
-            DONE      -> throw MatchingException.of(FAILED_REJECT_MATCHING_INVITATION_STATUS_DONE)
-            PENDING   -> {
-                this.rejectMessage = rejectMessage
-                this.status = REJECTED
-            }
+        if (status != PENDING) {
+            throw MatchingException.forInvalidInvitationStatus(status, MatchingAction.REJECT)
         }
+        this.rejectMessage = rejectMessage
+        this.status = REJECTED
     }
 
     /** 매칭 초대 취소 */
     fun cancel() {
-        when (status) {
-            ACCEPTED  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_ACCEPTED)
-            MATCHING  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_MATCHING)
-            REJECTED  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_REJECTED)
-            CANCELED  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_CANCELED)
-            ABORTED   -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_ABORTED)
-            DONE      -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_DONE)
-            PENDING   -> this.status = CANCELED
+        if (status != PENDING) {
+            throw MatchingException.forInvalidInvitationStatus(status, MatchingAction.CANCEL)
         }
+        this.status = CANCELED
     }
 
     /** 초대한 사용자 확인 */

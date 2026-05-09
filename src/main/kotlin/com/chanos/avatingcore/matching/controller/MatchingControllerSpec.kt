@@ -52,16 +52,17 @@ interface MatchingControllerSpec {
     ): ApiResponse<CreateInvitationResponse>
 
     @Operation(
-        summary = "매칭 초대 거절",
-        description = "받은 매칭 초대를 거절합니다. 초대받은 아바타의 소유자만 거절할 수 있습니다. 인증이 필요합니다.",
+        summary = "매칭 초대 수락",
+        description = "받은 매칭 초대를 수락하여 매칭을 시작합니다. 초대받은 아바타의 소유자만 수락할 수 있으며, " +
+            "PENDING 상태인 초대만 수락 가능합니다. 인증이 필요합니다.",
         security = [SecurityRequirement(name = "bearer")],
     )
     @ApiResponses(
-        SwaggerApiResponse(responseCode = "200", description = "매칭 초대 거절 성공"),
+        SwaggerApiResponse(responseCode = "201", description = "매칭 초대 수락 성공"),
         SwaggerApiResponse(
             responseCode = "400",
-            description = "매칭 초대 기록을 찾을 수 없거나 현재 상태에서 거절 불가 " +
-                "(MATCHING_400_003, MATCHING_400_004, MATCHING_400_005, MATCHING_400_006, MATCHING_400_007, MATCHING_400_008, MATCHING_400_009)",
+            description = "매칭 초대 기록을 찾을 수 없거나 현재 상태에서 수락 불가 " +
+                "(MATCHING_400_003, MATCHING_400_004)",
             content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
         ),
         SwaggerApiResponse(
@@ -71,7 +72,36 @@ interface MatchingControllerSpec {
         ),
         SwaggerApiResponse(
             responseCode = "403",
-            description = "해당 초대의 수신자가 아님 (MATCHING_403_002)",
+            description = "해당 초대의 수신자가 아님 (MATCHING_403_003)",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+    )
+    fun acceptMatchingInvitation(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @PathVariable invitationId: UUID,
+    ): ApiResponse<Unit>
+
+    @Operation(
+        summary = "매칭 초대 거절",
+        description = "받은 매칭 초대를 거절합니다. 초대받은 아바타의 소유자만 거절할 수 있습니다. 인증이 필요합니다.",
+        security = [SecurityRequirement(name = "bearer")],
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "매칭 초대 거절 성공"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "매칭 초대 기록을 찾을 수 없거나 현재 상태에서 거절 불가 " +
+                "(MATCHING_400_003, MATCHING_400_004)",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "403",
+            description = "해당 초대의 수신자가 아님 (MATCHING_403_003)",
             content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
         ),
     )
@@ -91,7 +121,7 @@ interface MatchingControllerSpec {
         SwaggerApiResponse(
             responseCode = "400",
             description = "매칭 초대 기록을 찾을 수 없거나 현재 상태에서 취소 불가 " +
-                "(MATCHING_400_003, MATCHING_400_010, MATCHING_400_011, MATCHING_400_012, MATCHING_400_013, MATCHING_400_014, MATCHING_400_015)",
+                "(MATCHING_400_003, MATCHING_400_004)",
             content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
         ),
         SwaggerApiResponse(
