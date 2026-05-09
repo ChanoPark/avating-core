@@ -44,7 +44,8 @@ class GlobalExceptionHandler {
     /** JSON 파싱 실패 (필드 누락, 타입 불일치 등) */
     @ExceptionHandler(
         ServletRequestBindingException::class,
-        HttpMessageNotReadableException::class
+        HttpMessageNotReadableException::class,
+        IllegalArgumentException::class,
     )
     fun handleHttpMessageNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
         val errorCode = CommonErrorCode.INVALID_INPUT
@@ -87,7 +88,7 @@ class GlobalExceptionHandler {
             .body(ErrorResponse.of(code = errorCode.code, message = errorCode.message))
     }
 
-    /** 존재하지 않는 엔드포인트 */
+    /** 지원하지 않는 HTTP Method */
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     fun handleMethodNotSupportedException(e: HttpRequestMethodNotSupportedException): ResponseEntity<ErrorResponse> {
         val errorCode = CommonErrorCode.NOT_FOUND

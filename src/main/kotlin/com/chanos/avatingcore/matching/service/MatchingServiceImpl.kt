@@ -69,6 +69,19 @@ class MatchingServiceImpl(
         log.debug("matching_invitation_rejected invitationId={}", invitationId)
     }
 
+    @Transactional(readOnly = false)
+    override fun cancelInvitation(memberId: UUID, invitationId: UUID) {
+        val invitation: MatchingInvitation = matchingInvitationRepository.findById(invitationId)
+            .orElseThrow { MatchingException.of(NOT_FOUND_MATCHING_INVITATION) }
+
+        if (!invitation.isInviter(memberId)) {
+            throw MatchingException.of(NOT_INVITATION_CREATOR)
+        }
+
+        invitation.cancel()
+        log.debug("matching_invitation_canceled invitationId={}", invitationId)
+    }
+
     /** 진행 중인 매칭이 있으면 예외 처리 */
     private fun checkInProgressMatching(inviterAvatar: Avatar, inviteeAvatar: Avatar) {
         val inProgressMatching: List<MatchingInvitationInfo> = matchingInvitationRepository.findMatchingInfoByStatusesAndAvatars(

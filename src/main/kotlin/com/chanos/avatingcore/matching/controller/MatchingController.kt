@@ -49,4 +49,13 @@ class MatchingController(
         matchingService.rejectInvitation(principal.memberId, invitationId, request.rejectMessage)
         return ApiResponse.of(Unit)
     }
+
+    @PatchMapping("/invitations/{invitationId}/cancel")
+    override fun cancelMatchingInvitation(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @PathVariable invitationId: UUID,
+    ): ApiResponse<Unit> {
+        matchingService.cancelInvitation(principal.memberId, invitationId)
+        return ApiResponse.of(Unit)
+    }
 }

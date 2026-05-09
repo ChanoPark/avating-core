@@ -270,6 +270,92 @@ class MatchingServiceImplTest : BehaviorSpec({
         }
     }
 
+    given("cancelInvitation - 매칭 초대를 찾을 수 없을 때") {
+        `when`("cancelInvitation을 호출하면") {
+            then("NOT_FOUND_MATCHING_INVITATION 예외가 발생한다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                every { matchingRepository.findById(invitationId) } returns Optional.empty()
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.cancelInvitation(memberId, invitationId)
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION
+            }
+        }
+    }
+
+    given("cancelInvitation - 초대한 사용자가 아닐 때") {
+        `when`("cancelInvitation을 호출하면") {
+            then("NOT_INVITATION_CREATOR 예외가 발생하고 cancel은 호출되지 않는다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                val invitation = mockk<MatchingInvitation>()
+                every { invitation.isInviter(memberId) } returns false
+                every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                val ex = shouldThrow<MatchingException> {
+                    sut.cancelInvitation(memberId, invitationId)
+                }
+
+                ex.errorCode shouldBe MatchingErrorCode.NOT_INVITATION_CREATOR
+                verify(exactly = 0) { invitation.cancel() }
+            }
+        }
+    }
+
+    given("cancelInvitation - 초대 상태가 PENDING이 아닐 때") {
+        listOf(
+            MatchingInvitationStatus.ACCEPTED to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_ACCEPTED,
+            MatchingInvitationStatus.MATCHING  to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_MATCHING,
+            MatchingInvitationStatus.REJECTED  to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_REJECTED,
+            MatchingInvitationStatus.CANCELED  to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_CANCELED,
+            MatchingInvitationStatus.ABORTED   to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_ABORTED,
+            MatchingInvitationStatus.DONE      to MatchingErrorCode.FAILED_CANCEL_MATCHING_INVITATION_STATUS_DONE,
+        ).forEach { (status, expectedErrorCode) ->
+            `when`("초대 상태가 $status 일 때 cancelInvitation을 호출하면") {
+                then("${expectedErrorCode.name} 예외가 발생한다") {
+                    val memberId = UUID.randomUUID()
+                    val invitationId = UUID.randomUUID()
+                    val invitation = MatchingInvitation(
+                        inviterAvatar = mockAvatar(memberId = memberId),
+                        inviteeAvatar = mockAvatar(),
+                        status = status,
+                        expiredAt = java.time.OffsetDateTime.now().plusDays(1),
+                    )
+                    every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                    val ex = shouldThrow<MatchingException> {
+                        sut.cancelInvitation(memberId, invitationId)
+                    }
+
+                    ex.errorCode shouldBe expectedErrorCode
+                }
+            }
+        }
+    }
+
+    given("cancelInvitation - 정상적인 취소 요청일 때") {
+        `when`("cancelInvitation을 호출하면") {
+            then("invitation.cancel이 1회 호출된다") {
+                val memberId = UUID.randomUUID()
+                val invitationId = UUID.randomUUID()
+
+                val invitation = mockk<MatchingInvitation>()
+                every { invitation.isInviter(memberId) } returns true
+                every { invitation.cancel() } just Runs
+                every { matchingRepository.findById(invitationId) } returns Optional.of(invitation)
+
+                sut.cancelInvitation(memberId, invitationId)
+
+                verify(exactly = 1) { invitation.cancel() }
+            }
+        }
+    }
+
     given("inviteMatching - 정상적인 매칭 초대 생성 요청일 때") {
         `when`("inviteMatching을 호출하면") {
             then("matchingRepository.save가 1회 호출되고 inviteeAvatar.id가 올바르게 저장되며 응답 status가 PENDING이다") {

@@ -80,4 +80,33 @@ interface MatchingControllerSpec {
         @PathVariable invitationId: UUID,
         @RequestBody @Valid request: RejectInvitationRequest,
     ): ApiResponse<Unit>
+
+    @Operation(
+        summary = "매칭 초대 취소",
+        description = "보낸 매칭 초대를 취소합니다. 초대를 보낸 아바타의 소유자만 취소할 수 있으며, PENDING 상태일 때만 취소 가능합니다. 인증이 필요합니다.",
+        security = [SecurityRequirement(name = "bearer")],
+    )
+    @ApiResponses(
+        SwaggerApiResponse(responseCode = "200", description = "매칭 초대 취소 성공"),
+        SwaggerApiResponse(
+            responseCode = "400",
+            description = "매칭 초대 기록을 찾을 수 없거나 현재 상태에서 취소 불가 " +
+                "(MATCHING_400_003, MATCHING_400_010, MATCHING_400_011, MATCHING_400_012, MATCHING_400_013, MATCHING_400_014, MATCHING_400_015)",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "401",
+            description = "인증 필요",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+        SwaggerApiResponse(
+            responseCode = "403",
+            description = "해당 초대의 발신자가 아님 (MATCHING_403_002)",
+            content = [Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponse::class))],
+        ),
+    )
+    fun cancelMatchingInvitation(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @PathVariable invitationId: UUID,
+    ): ApiResponse<Unit>
 }

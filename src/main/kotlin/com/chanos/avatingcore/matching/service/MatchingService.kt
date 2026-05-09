@@ -27,4 +27,11 @@ interface MatchingService {
      * @param rejectMessage rejectMessage
      */
     fun rejectInvitation(memberId: UUID, invitationId: UUID, rejectMessage: String)
+
+    /**
+     * 매칭 초대 취소
+     * @param memberId memberId
+     * @param invitationId invitationId
+     */
+    fun cancelInvitation(memberId: UUID, invitationId: UUID)
 }

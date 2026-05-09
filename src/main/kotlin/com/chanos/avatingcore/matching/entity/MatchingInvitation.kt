@@ -38,7 +38,7 @@ class MatchingInvitation(
     @Column(name = "reject_message", length = 300)
     var rejectMessage: String? = null,
 
-    @Column(name = "expired_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
+    @Column(name = "expired_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
     var expiredAt: OffsetDateTime
 
 ) : BaseUUIDEntity() {
@@ -71,8 +71,22 @@ class MatchingInvitation(
         }
     }
 
-    /** 초대 받은 사용자 확인 */
-    fun isInvitee(memberId: UUID): Boolean {
-        return inviteeAvatar.member.id == memberId
+    /** 매칭 초대 취소 */
+    fun cancel() {
+        when (status) {
+            ACCEPTED  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_ACCEPTED)
+            MATCHING  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_MATCHING)
+            REJECTED  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_REJECTED)
+            CANCELED  -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_CANCELED)
+            ABORTED   -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_ABORTED)
+            DONE      -> throw MatchingException.of(FAILED_CANCEL_MATCHING_INVITATION_STATUS_DONE)
+            PENDING   -> this.status = CANCELED
+        }
     }
+
+    /** 초대한 사용자 확인 */
+    fun isInviter(memberId: UUID): Boolean = inviterAvatar.member.id == memberId
+
+    /** 초대 받은 사용자 확인 */
+    fun isInvitee(memberId: UUID): Boolean = inviteeAvatar.member.id == memberId
 }
