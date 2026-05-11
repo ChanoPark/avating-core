@@ -4,6 +4,7 @@ import com.chanos.avatingcore.avatar.entity.Avatar
 import com.chanos.avatingcore.avatar.vo.AvatarPersonaProjection
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface AvatarRepository : JpaRepository<Avatar, UUID> {
@@ -11,6 +12,9 @@ interface AvatarRepository : JpaRepository<Avatar, UUID> {
     fun existsByName(name: String): Boolean
     fun findByMemberIdAndIsPrimaryTrue(memberId: UUID): Avatar?
     fun findByIdAndMemberId(id: UUID, memberId: UUID): Avatar?
+
+    @Query("SELECT a.id FROM Avatar a WHERE a.member.id = :memberId")
+    fun findIdsByMemberId(@Param("memberId") memberId: UUID): List<UUID>
 
     @Query(
         """

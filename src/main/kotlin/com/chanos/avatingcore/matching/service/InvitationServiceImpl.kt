@@ -1,25 +1,31 @@
 package com.chanos.avatingcore.matching.service
 
 import com.chanos.avatingcore.avatar.entity.Avatar
+import com.chanos.avatingcore.avatar.repository.AvatarRepository
 import com.chanos.avatingcore.avatar.service.AvatarService
+import com.chanos.avatingcore.global.response.CursorPageResponse
 import com.chanos.avatingcore.global.util.logger
+import com.chanos.avatingcore.matching.dto.request.InvitationHistoryRequest
 import com.chanos.avatingcore.matching.dto.response.CreateInvitationResponse
-import com.chanos.avatingcore.matching.vo.MatchingInvitationInfo
+import com.chanos.avatingcore.matching.dto.response.InvitationHistoryResponse
 import com.chanos.avatingcore.matching.entity.MatchingInvitation
 import com.chanos.avatingcore.matching.exception.MatchingErrorCode.*
 import com.chanos.avatingcore.matching.exception.MatchingException
-import com.chanos.avatingcore.matching.repository.MatchingInvitationRepository
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
+import com.chanos.avatingcore.matching.repository.InvitationRepository
+import com.chanos.avatingcore.matching.vo.InvitationCursor
+import com.chanos.avatingcore.matching.vo.InvitationInfo
+import com.chanos.avatingcore.matching.vo.InvitationStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
 @Transactional(readOnly = true)
-class MatchingServiceImpl(
-    private val matchingInvitationRepository: MatchingInvitationRepository,
+class InvitationServiceImpl(
+    private val invitationRepository: InvitationRepository,
     private val avatarService: AvatarService,
-) : MatchingService {
+    private val avatarRepository: AvatarRepository,
+) : InvitationService {
     private val log = logger()
 
     @Transactional(readOnly = false)
@@ -42,7 +48,7 @@ class MatchingServiceImpl(
 
         // 매칭 초대 생성
         val invitation = MatchingInvitation.createInvitation(inviterAvatar, inviteeAvatar, requestMessage)
-        matchingInvitationRepository.save(invitation)
+        invitationRepository.save(invitation)
 
         log.debug("matching_invitation_created inviter={}, invitee={}, expiredAt={}",
             invitation.inviterAvatar.name, invitation.inviteeAvatar.name, invitation.expiredAt)
@@ -74,7 +80,7 @@ class MatchingServiceImpl(
 
     @Transactional(readOnly = false)
     override fun cancelInvitation(memberId: UUID, invitationId: UUID) {
-        val invitation: MatchingInvitation = matchingInvitationRepository.findById(invitationId)
+        val invitation: MatchingInvitation = invitationRepository.findById(invitationId)
             .orElseThrow { MatchingException.of(NOT_FOUND_MATCHING_INVITATION) }
 
         if (!invitation.isInviter(memberId)) {
@@ -87,7 +93,7 @@ class MatchingServiceImpl(
 
     /** 초대 받은 매칭 조회 */
     private fun getInvitedInvitation(invitationId: UUID, memberId: UUID): MatchingInvitation {
-        val invitation: MatchingInvitation = matchingInvitationRepository.findById(invitationId)
+        val invitation: MatchingInvitation = invitationRepository.findById(invitationId)
             .orElseThrow { MatchingException.of(NOT_FOUND_MATCHING_INVITATION) }
 
         if (!invitation.isInvitee(memberId)) {
@@ -97,10 +103,40 @@ class MatchingServiceImpl(
         return invitation
     }
 
+    override fun getInvitationHistory(
+        memberId: UUID,
+        request: InvitationHistoryRequest,
+    ): CursorPageResponse<InvitationHistoryResponse> {
+        // 아바타 조회
+        val avatarIds = avatarRepository.findIdsByMemberId(memberId)
+        if (avatarIds.isEmpty()) {
+            return CursorPageResponse.empty()
+        }
+
+        // 커서 기반 조회
+        val cursor = request.cursor?.let { InvitationCursor.decode(it) }
+        val projections = invitationRepository.findHistoryWithCursor(
+            avatarIds = avatarIds,
+            direction = request.direction,
+            status = request.status,
+            cursor = cursor,
+            limit = request.size + 1,
+        )
+
+        val hasNext = projections.size > request.size
+        val pageContent = if (hasNext) projections.dropLast(1) else projections
+        val responses = pageContent.map {
+            InvitationHistoryResponse.fromMatchingInvitationProjection(it, request.direction)
+        }
+        val nextCursor = if (hasNext) InvitationCursor.fromProjection(pageContent.last()).encode() else null
+
+        return CursorPageResponse.of(responses, nextCursor, hasNext)
+    }
+
     /** 진행 중인 매칭이 있으면 예외 처리 */
     private fun checkInProgressMatching(inviterAvatar: Avatar, inviteeAvatar: Avatar) {
-        val inProgressMatching: List<MatchingInvitationInfo> = matchingInvitationRepository.findMatchingInfoByStatusesAndAvatars(
-            statuses = MatchingInvitationStatus.getInProgressStatuses(),
+        val inProgressMatching: List<InvitationInfo> = invitationRepository.findMatchingInfoByStatusesAndAvatars(
+            statuses = InvitationStatus.getInProgressStatuses(),
             inviterAvatarId = inviterAvatar.id,
             inviteeAvatarId = inviteeAvatar.id,
         )

@@ -4,7 +4,8 @@ import com.chanos.avatingcore.auth.exception.AuthErrorCode
 import com.chanos.avatingcore.auth.exception.AuthException
 import com.chanos.avatingcore.auth.jwt.JwtProvider
 import com.chanos.avatingcore.auth.jwt.TokenType
-import tools.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.jsonwebtoken.Claims
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -13,8 +14,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import jakarta.servlet.FilterChain
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
@@ -23,7 +22,7 @@ import java.util.UUID
 class JwtAuthenticationFilterTest : BehaviorSpec({
 
     val jwtProvider = mockk<JwtProvider>()
-    val objectMapper = ObjectMapper()
+    val objectMapper = ObjectMapper().registerModule(JavaTimeModule())
     val entryPoint = JwtAuthenticationEntryPoint(objectMapper)
     val filter = JwtAuthenticationFilter(jwtProvider, entryPoint)
 

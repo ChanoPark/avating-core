@@ -58,4 +58,11 @@ enum class MatchingErrorCode(
         message = "초대 받은 사용자가 아닙니다.",
         reason = "User is not the recipient of this invitation",
     ),
+
+    INVALID_CURSOR(
+        status = HttpStatus.BAD_REQUEST,
+        code = "MATCHING_400_005",
+        message = "유효하지 않은 커서입니다.",
+        reason = "Invalid cursor value",
+    ),
 }

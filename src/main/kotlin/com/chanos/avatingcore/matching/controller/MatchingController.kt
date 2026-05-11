@@ -1,15 +1,20 @@
 package com.chanos.avatingcore.matching.controller
 
 import com.chanos.avatingcore.global.response.ApiResponse
+import com.chanos.avatingcore.global.response.CursorPageResponse
 import com.chanos.avatingcore.global.security.MemberPrincipal
 import com.chanos.avatingcore.matching.dto.request.CreateInvitationRequest
+import com.chanos.avatingcore.matching.dto.request.InvitationHistoryRequest
 import com.chanos.avatingcore.matching.dto.request.RejectInvitationRequest
 import com.chanos.avatingcore.matching.dto.response.CreateInvitationResponse
-import com.chanos.avatingcore.matching.service.MatchingService
+import com.chanos.avatingcore.matching.dto.response.InvitationHistoryResponse
+import com.chanos.avatingcore.matching.service.InvitationService
 import jakarta.validation.Valid
+import org.springdoc.core.annotations.ParameterObject
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -23,7 +28,7 @@ import java.util.UUID
 @RequestMapping("/api/matching")
 @Validated
 class MatchingController(
-    private val matchingService: MatchingService,
+    private val invitationService: InvitationService,
 ) : MatchingControllerSpec {
 
     @PostMapping("/invitations")
@@ -32,7 +37,7 @@ class MatchingController(
         @AuthenticationPrincipal principal: MemberPrincipal,
         @RequestBody @Valid request: CreateInvitationRequest,
     ): ApiResponse<CreateInvitationResponse> {
-        return ApiResponse.of(matchingService.createInvitation(
+        return ApiResponse.of(invitationService.createInvitation(
             memberId = principal.memberId,
             inviterAvatarId = request.inviterAvatarId,
             inviteeAvatarId = request.inviteeAvatarId,
@@ -46,7 +51,7 @@ class MatchingController(
         @AuthenticationPrincipal principal: MemberPrincipal,
         @PathVariable invitationId: UUID,
     ): ApiResponse<Unit> {
-        matchingService.acceptInvitation(principal.memberId, invitationId)
+        invitationService.acceptInvitation(principal.memberId, invitationId)
         return ApiResponse.of(Unit)
     }
 
@@ -56,7 +61,7 @@ class MatchingController(
         @PathVariable invitationId: UUID,
         @RequestBody @Valid request: RejectInvitationRequest,
     ): ApiResponse<Unit> {
-        matchingService.rejectInvitation(principal.memberId, invitationId, request.rejectMessage)
+        invitationService.rejectInvitation(principal.memberId, invitationId, request.rejectMessage)
         return ApiResponse.of(Unit)
     }
 
@@ -65,7 +70,14 @@ class MatchingController(
         @AuthenticationPrincipal principal: MemberPrincipal,
         @PathVariable invitationId: UUID,
     ): ApiResponse<Unit> {
-        matchingService.cancelInvitation(principal.memberId, invitationId)
+        invitationService.cancelInvitation(principal.memberId, invitationId)
         return ApiResponse.of(Unit)
     }
+
+    @GetMapping("/invitations")
+    override fun getInvitationHistory(
+        @AuthenticationPrincipal principal: MemberPrincipal,
+        @ParameterObject @Valid request: InvitationHistoryRequest,
+    ): ApiResponse<CursorPageResponse<InvitationHistoryResponse>> =
+        ApiResponse.of(invitationService.getInvitationHistory(principal.memberId, request))
 }

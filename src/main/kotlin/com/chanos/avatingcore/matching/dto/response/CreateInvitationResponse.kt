@@ -1,6 +1,6 @@
 package com.chanos.avatingcore.matching.dto.response
 
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
+import com.chanos.avatingcore.matching.vo.InvitationStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -16,7 +16,7 @@ data class CreateInvitationResponse(
     val inviteeAvatarName: String,
 
     @Schema(description = "매칭 초대 상태", example = "PENDING")
-    val status: MatchingInvitationStatus,
+    val status: InvitationStatus,
 
     @Schema(description = "초대 만료 일시 (UTC+9)", example = "2026-05-09T23:59:59+09:00")
     val expiredAt: OffsetDateTime,
@@ -26,7 +26,7 @@ data class CreateInvitationResponse(
             matchingInvitationId: UUID,
             inviterAvatarName: String,
             inviteeAvatarName: String,
-            status: MatchingInvitationStatus,
+            status: InvitationStatus,
             expiredAt: OffsetDateTime,
         ) = CreateInvitationResponse(matchingInvitationId, inviterAvatarName, inviteeAvatarName, status, expiredAt)
     }

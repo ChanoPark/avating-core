@@ -1,16 +1,16 @@
 package com.chanos.avatingcore.matching.repository
 
 import com.chanos.avatingcore.matching.entity.MatchingInvitation
-import com.chanos.avatingcore.matching.vo.MatchingInvitationInfo
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
+import com.chanos.avatingcore.matching.vo.InvitationInfo
+import com.chanos.avatingcore.matching.vo.InvitationStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.util.UUID
 
-interface MatchingInvitationRepository : JpaRepository<MatchingInvitation, UUID> {
+interface InvitationRepository : JpaRepository<MatchingInvitation, UUID>, InvitationJdslRepository {
     @Query(
         """
-            SELECT new com.chanos.avatingcore.matching.vo.MatchingInvitationInfo(
+            SELECT new com.chanos.avatingcore.matching.vo.InvitationInfo(
                 m.inviterAvatar.id,
                 m.inviteeAvatar.id,
                 m.status
@@ -25,8 +25,8 @@ interface MatchingInvitationRepository : JpaRepository<MatchingInvitation, UUID>
         """
     )
     fun findMatchingInfoByStatusesAndAvatars(
-        statuses: List<MatchingInvitationStatus>,
+        statuses: List<InvitationStatus>,
         inviterAvatarId: UUID,
         inviteeAvatarId: UUID,
-    ): List<MatchingInvitationInfo>
+    ): List<InvitationInfo>
 }

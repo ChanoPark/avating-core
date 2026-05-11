@@ -2,8 +2,8 @@ package com.chanos.avatingcore.matching.vo
 
 import java.util.UUID
 
-data class MatchingInvitationInfo(
+data class InvitationInfo(
     val inviterAvatarId: UUID,
     val inviteeAvatarId: UUID,
-    val status: MatchingInvitationStatus,
+    val status: InvitationStatus,
 )

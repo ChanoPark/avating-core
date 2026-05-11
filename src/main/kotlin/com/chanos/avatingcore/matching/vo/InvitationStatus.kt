@@ -1,6 +1,6 @@
 package com.chanos.avatingcore.matching.vo
 
-enum class MatchingInvitationStatus {
+enum class InvitationStatus {
     PENDING,        // 대기 중
     ACCEPTED,       // 수락
     MATCHING,       // 매칭 중
@@ -11,7 +11,7 @@ enum class MatchingInvitationStatus {
     ;
 
     companion object {
-        fun getInProgressStatuses(): List<MatchingInvitationStatus> = listOf(
+        fun getInProgressStatuses(): List<InvitationStatus> = listOf(
             PENDING,
             ACCEPTED,
             MATCHING,

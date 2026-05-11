@@ -2,15 +2,15 @@ package com.chanos.avatingcore.matching.exception
 
 import com.chanos.avatingcore.global.exception.CommonException
 import com.chanos.avatingcore.matching.exception.MatchingErrorCode.INVALID_MATCHING_INVITATION_STATUS
-import com.chanos.avatingcore.matching.vo.MatchingAction
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.ABORTED
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.ACCEPTED
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.CANCELED
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.DONE
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.MATCHING
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.PENDING
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.REJECTED
+import com.chanos.avatingcore.matching.vo.InvitationAction
+import com.chanos.avatingcore.matching.vo.InvitationStatus
+import com.chanos.avatingcore.matching.vo.InvitationStatus.ABORTED
+import com.chanos.avatingcore.matching.vo.InvitationStatus.ACCEPTED
+import com.chanos.avatingcore.matching.vo.InvitationStatus.CANCELED
+import com.chanos.avatingcore.matching.vo.InvitationStatus.DONE
+import com.chanos.avatingcore.matching.vo.InvitationStatus.MATCHING
+import com.chanos.avatingcore.matching.vo.InvitationStatus.PENDING
+import com.chanos.avatingcore.matching.vo.InvitationStatus.REJECTED
 
 class MatchingException(
     errorCode: MatchingErrorCode,
@@ -22,7 +22,7 @@ class MatchingException(
         fun withArgs(errorCode: MatchingErrorCode, vararg args: Any): MatchingException =
             MatchingException(errorCode, errorCode.message.format(*args))
 
-        fun forInvalidInvitationStatus(current: MatchingInvitationStatus, action: MatchingAction): MatchingException {
+        fun forInvalidInvitationStatus(current: InvitationStatus, action: InvitationAction): MatchingException {
             val statusLabel = when (current) {
                 PENDING  -> "대기 중인"
                 ACCEPTED -> "이미 수락된"

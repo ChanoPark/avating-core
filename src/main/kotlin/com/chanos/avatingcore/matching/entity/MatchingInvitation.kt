@@ -3,12 +3,12 @@ package com.chanos.avatingcore.matching.entity
 import com.chanos.avatingcore.avatar.entity.Avatar
 import com.chanos.avatingcore.global.entity.BaseUUIDEntity
 import com.chanos.avatingcore.matching.exception.MatchingException
-import com.chanos.avatingcore.matching.vo.MatchingAction
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.ACCEPTED
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.CANCELED
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.PENDING
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus.REJECTED
+import com.chanos.avatingcore.matching.vo.InvitationAction
+import com.chanos.avatingcore.matching.vo.InvitationStatus
+import com.chanos.avatingcore.matching.vo.InvitationStatus.ACCEPTED
+import com.chanos.avatingcore.matching.vo.InvitationStatus.CANCELED
+import com.chanos.avatingcore.matching.vo.InvitationStatus.PENDING
+import com.chanos.avatingcore.matching.vo.InvitationStatus.REJECTED
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -34,7 +34,7 @@ class MatchingInvitation(
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    var status: MatchingInvitationStatus,
+    var status: InvitationStatus,
 
     @Column(name = "request_message", length = 300)
     var requestMessage: String? = null,
@@ -66,7 +66,7 @@ class MatchingInvitation(
     /** 매칭 초대 수락 */
     fun accept() {
         if (status != PENDING) {
-            throw MatchingException.forInvalidInvitationStatus(status, MatchingAction.ACCEPT)
+            throw MatchingException.forInvalidInvitationStatus(status, InvitationAction.ACCEPT)
         }
         this.status = ACCEPTED
     }
@@ -74,7 +74,7 @@ class MatchingInvitation(
     /** 매칭 초대 거절 */
     fun reject(rejectMessage: String) {
         if (status != PENDING) {
-            throw MatchingException.forInvalidInvitationStatus(status, MatchingAction.REJECT)
+            throw MatchingException.forInvalidInvitationStatus(status, InvitationAction.REJECT)
         }
         this.rejectMessage = rejectMessage
         this.status = REJECTED
@@ -83,7 +83,7 @@ class MatchingInvitation(
     /** 매칭 초대 취소 */
     fun cancel() {
         if (status != PENDING) {
-            throw MatchingException.forInvalidInvitationStatus(status, MatchingAction.CANCEL)
+            throw MatchingException.forInvalidInvitationStatus(status, InvitationAction.CANCEL)
         }
         this.status = CANCELED
     }

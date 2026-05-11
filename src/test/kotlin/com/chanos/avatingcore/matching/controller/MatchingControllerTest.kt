@@ -2,12 +2,15 @@ package com.chanos.avatingcore.matching.controller
 
 import com.chanos.avatingcore.auth.jwt.JwtProvider
 import com.chanos.avatingcore.auth.jwt.TokenType
+import com.chanos.avatingcore.global.response.CursorPageResponse
 import com.chanos.avatingcore.global.security.JwtAuthenticationEntryPoint
 import com.chanos.avatingcore.matching.dto.response.CreateInvitationResponse
+import com.chanos.avatingcore.matching.dto.response.InvitationHistoryResponse
 import com.chanos.avatingcore.matching.exception.MatchingErrorCode
 import com.chanos.avatingcore.matching.exception.MatchingException
-import com.chanos.avatingcore.matching.service.MatchingService
-import com.chanos.avatingcore.matching.vo.MatchingInvitationStatus
+import com.chanos.avatingcore.matching.service.InvitationService
+import com.chanos.avatingcore.matching.vo.InvitationDirection
+import com.chanos.avatingcore.matching.vo.InvitationStatus
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.jsonwebtoken.Claims
@@ -23,6 +26,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import java.time.OffsetDateTime
@@ -37,7 +41,7 @@ class MatchingControllerTest : BehaviorSpec() {
     lateinit var mockMvc: MockMvc
 
     @MockkBean
-    lateinit var matchingService: MatchingService
+    lateinit var invitationService: InvitationService
 
     @MockkBean
     lateinit var jwtProvider: JwtProvider
@@ -85,11 +89,11 @@ class MatchingControllerTest : BehaviorSpec() {
                             matchingInvitationId = UUID.randomUUID(),
                             inviterAvatarName = "초대자아바타",
                             inviteeAvatarName = "피초대자아바타",
-                            status = MatchingInvitationStatus.PENDING,
+                            status = InvitationStatus.PENDING,
                             expiredAt = expiredAt,
                         )
                         every {
-                            matchingService.createInvitation(mockMemberId, inviterAvatarId, inviteeAvatarId, "안녕하세요, 매칭 신청합니다.")
+                            invitationService.createInvitation(mockMemberId, inviterAvatarId, inviteeAvatarId, "안녕하세요, 매칭 신청합니다.")
                         } returns response
 
                         mockMvc.post("/api/matching/invitations") {
@@ -221,7 +225,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request와 MATCHING_400_001 코드가 반환된다") {
                         stubJwtAuthentication()
                         every {
-                            matchingService.createInvitation(any(), any(), any(), any())
+                            invitationService.createInvitation(any(), any(), any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_AVATAR)
 
                         mockMvc.post("/api/matching/invitations") {
@@ -241,7 +245,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("400 Bad Request와 MATCHING_400_002 코드가 반환된다") {
                         stubJwtAuthentication()
                         every {
-                            matchingService.createInvitation(any(), any(), any(), any())
+                            invitationService.createInvitation(any(), any(), any(), any())
                         } throws MatchingException.withArgs(MatchingErrorCode.IN_PROGRESS_MATCHING, "테스트아바타")
 
                         mockMvc.post("/api/matching/invitations") {
@@ -261,7 +265,7 @@ class MatchingControllerTest : BehaviorSpec() {
                     then("403 Forbidden과 MATCHING_403_001 코드가 반환된다") {
                         stubJwtAuthentication()
                         every {
-                            matchingService.createInvitation(any(), any(), any(), any())
+                            invitationService.createInvitation(any(), any(), any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_AVATAR_OWNER)
 
                         mockMvc.post("/api/matching/invitations") {
@@ -286,7 +290,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         val invitationId = UUID.randomUUID()
 
                         every {
-                            matchingService.rejectInvitation(mockMemberId, invitationId, "아바타가 마음에 들지 않아요.")
+                            invitationService.rejectInvitation(mockMemberId, invitationId, "아바타가 마음에 들지 않아요.")
                         } just Runs
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
@@ -376,7 +380,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.rejectInvitation(any(), any(), any())
+                            invitationService.rejectInvitation(any(), any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION)
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
@@ -397,7 +401,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.rejectInvitation(any(), any(), any())
+                            invitationService.rejectInvitation(any(), any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_INVITATION_RECIPIENT)
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
@@ -418,10 +422,10 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.rejectInvitation(any(), any(), any())
+                            invitationService.rejectInvitation(any(), any(), any())
                         } throws MatchingException.forInvalidInvitationStatus(
-                            MatchingInvitationStatus.ACCEPTED,
-                            com.chanos.avatingcore.matching.vo.MatchingAction.REJECT,
+                            InvitationStatus.ACCEPTED,
+                            com.chanos.avatingcore.matching.vo.InvitationAction.REJECT,
                         )
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/reject") {
@@ -446,7 +450,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         val invitationId = UUID.randomUUID()
 
                         every {
-                            matchingService.cancelInvitation(mockMemberId, invitationId)
+                            invitationService.cancelInvitation(mockMemberId, invitationId)
                         } just Runs
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/cancel") {
@@ -481,7 +485,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.cancelInvitation(any(), any())
+                            invitationService.cancelInvitation(any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION)
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/cancel") {
@@ -500,7 +504,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.cancelInvitation(any(), any())
+                            invitationService.cancelInvitation(any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_INVITATION_CREATOR)
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/cancel") {
@@ -519,10 +523,10 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.cancelInvitation(any(), any())
+                            invitationService.cancelInvitation(any(), any())
                         } throws MatchingException.forInvalidInvitationStatus(
-                            MatchingInvitationStatus.ACCEPTED,
-                            com.chanos.avatingcore.matching.vo.MatchingAction.CANCEL,
+                            InvitationStatus.ACCEPTED,
+                            com.chanos.avatingcore.matching.vo.InvitationAction.CANCEL,
                         )
 
                         mockMvc.patch("/api/matching/invitations/$invitationId/cancel") {
@@ -530,6 +534,207 @@ class MatchingControllerTest : BehaviorSpec() {
                         }.andExpect {
                             status { isBadRequest() }
                             jsonPath("$.code") { value("MATCHING_400_004") }
+                        }
+                    }
+                }
+            }
+        }
+
+        given("GET /api/matching/invitations") {
+
+            fun buildHistoryResponse(
+                direction: InvitationDirection = InvitationDirection.SENT,
+            ) = InvitationHistoryResponse(
+                matchingInvitationId = UUID.randomUUID(),
+                inviterAvatarId = UUID.randomUUID(),
+                inviterAvatarName = "초대자아바타",
+                inviteeAvatarId = UUID.randomUUID(),
+                inviteeAvatarName = "피초대자아바타",
+                status = InvitationStatus.PENDING,
+                direction = direction,
+                requestMessage = "안녕하세요",
+                rejectMessage = null,
+                expiredAt = OffsetDateTime.now().plusDays(1),
+                createdAt = OffsetDateTime.now(),
+            )
+
+            and("인증된 사용자가 direction=SENT로 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK와 커서 페이지 응답이 반환된다") {
+                        stubJwtAuthentication()
+                        val response = CursorPageResponse.of(
+                            content = listOf(buildHistoryResponse()),
+                            nextCursor = null,
+                            hasNext = false,
+                        )
+                        every {
+                            invitationService.getInvitationHistory(mockMemberId, any())
+                        } returns response
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                            param("size", "10")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.content[0].inviterAvatarName") { value("초대자아바타") }
+                            jsonPath("$.data.content[0].direction") { value("SENT") }
+                            jsonPath("$.data.hasNext") { value(false) }
+                            jsonPath("$.data.nextCursor") { doesNotExist() }
+                        }
+                    }
+                }
+            }
+
+            and("다음 페이지가 존재할 때 (hasNext=true)") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK와 nextCursor가 채워진 응답이 반환된다") {
+                        stubJwtAuthentication()
+                        val response = CursorPageResponse.of(
+                            content = listOf(buildHistoryResponse()),
+                            nextCursor = "eyJjcmVhdGVkQXQiOiIyMDI2LTA1LTEwVDEyOjAwOjAwKzA5OjAwIiwiaWQiOiJ0ZXN0In0",
+                            hasNext = true,
+                        )
+                        every {
+                            invitationService.getInvitationHistory(mockMemberId, any())
+                        } returns response
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.hasNext") { value(true) }
+                            jsonPath("$.data.nextCursor") { exists() }
+                        }
+                    }
+                }
+            }
+
+            and("direction=RECEIVED로 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK와 RECEIVED 방향 응답이 반환된다") {
+                        stubJwtAuthentication()
+                        val response = CursorPageResponse.of(
+                            content = listOf(buildHistoryResponse(direction = InvitationDirection.RECEIVED)),
+                            nextCursor = null,
+                            hasNext = false,
+                        )
+                        every {
+                            invitationService.getInvitationHistory(mockMemberId, any())
+                        } returns response
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "RECEIVED")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.content[0].direction") { value("RECEIVED") }
+                        }
+                    }
+                }
+            }
+
+            and("인증 토큰 없이 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("401 Unauthorized가 반환된다") {
+                        every { jwtAuthenticationEntryPoint.commence(any(), any(), any()) } answers {
+                            val res = secondArg<jakarta.servlet.http.HttpServletResponse>()
+                            res.status = 401
+                        }
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                        }.andExpect {
+                            status { isUnauthorized() }
+                        }
+                    }
+                }
+            }
+
+            and("direction 파라미터가 없는 요청일 때") {
+                `when`("GET 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("size", "10")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+
+            and("size=0으로 요청할 때 (@Min 위반)") {
+                `when`("GET 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                            param("size", "0")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+
+            and("size=51로 요청할 때 (@Max 위반)") {
+                `when`("GET 요청을 보내면") {
+                    then("400 Bad Request가 반환된다") {
+                        stubJwtAuthentication()
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                            param("size", "51")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                        }
+                    }
+                }
+            }
+
+            and("service가 INVALID_CURSOR 예외를 던질 때") {
+                `when`("GET 요청을 보내면") {
+                    then("400 Bad Request와 MATCHING_400_005 코드가 반환된다") {
+                        stubJwtAuthentication()
+                        every {
+                            invitationService.getInvitationHistory(any(), any())
+                        } throws MatchingException.of(MatchingErrorCode.INVALID_CURSOR)
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                            param("cursor", "invalid-cursor")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isBadRequest() }
+                            jsonPath("$.code") { value("MATCHING_400_005") }
+                        }
+                    }
+                }
+            }
+
+            and("status 필터와 함께 요청할 때") {
+                `when`("GET 요청을 보내면") {
+                    then("200 OK가 반환된다") {
+                        stubJwtAuthentication()
+                        val response = CursorPageResponse.empty<InvitationHistoryResponse>()
+                        every {
+                            invitationService.getInvitationHistory(mockMemberId, any())
+                        } returns response
+
+                        mockMvc.get("/api/matching/invitations") {
+                            param("direction", "SENT")
+                            param("status", "PENDING")
+                            header("Authorization", "Bearer mock.token")
+                        }.andExpect {
+                            status { isOk() }
+                            jsonPath("$.data.content") { isArray() }
                         }
                     }
                 }
@@ -545,7 +750,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         val invitationId = UUID.randomUUID()
 
                         every {
-                            matchingService.acceptInvitation(mockMemberId, invitationId)
+                            invitationService.acceptInvitation(mockMemberId, invitationId)
                         } just Runs
 
                         mockMvc.post("/api/matching/invitations/$invitationId/accept") {
@@ -580,7 +785,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.acceptInvitation(any(), any())
+                            invitationService.acceptInvitation(any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_FOUND_MATCHING_INVITATION)
 
                         mockMvc.post("/api/matching/invitations/$invitationId/accept") {
@@ -599,7 +804,7 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.acceptInvitation(any(), any())
+                            invitationService.acceptInvitation(any(), any())
                         } throws MatchingException.of(MatchingErrorCode.NOT_INVITATION_RECIPIENT)
 
                         mockMvc.post("/api/matching/invitations/$invitationId/accept") {
@@ -618,10 +823,10 @@ class MatchingControllerTest : BehaviorSpec() {
                         stubJwtAuthentication()
                         val invitationId = UUID.randomUUID()
                         every {
-                            matchingService.acceptInvitation(any(), any())
+                            invitationService.acceptInvitation(any(), any())
                         } throws MatchingException.forInvalidInvitationStatus(
-                            MatchingInvitationStatus.ACCEPTED,
-                            com.chanos.avatingcore.matching.vo.MatchingAction.ACCEPT,
+                            InvitationStatus.ACCEPTED,
+                            com.chanos.avatingcore.matching.vo.InvitationAction.ACCEPT,
                         )
 
                         mockMvc.post("/api/matching/invitations/$invitationId/accept") {
