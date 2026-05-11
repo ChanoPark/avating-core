@@ -3,7 +3,7 @@ package com.chanos.avatingcore.avatar.entity
 import com.chanos.avatingcore.avatar.entity.enums.AvatarType
 import com.chanos.avatingcore.avatar.entity.enums.SourceType
 import com.chanos.avatingcore.global.entity.BaseUUIDEntity
-import com.chanos.avatingcore.matching.entity.MatchingInvitation
+import com.chanos.avatingcore.simulation.entity.SimulationInvitation
 import com.chanos.avatingcore.member.entity.Member
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -43,10 +43,10 @@ class Avatar(
 ) : BaseUUIDEntity() {
 
     @OneToMany(mappedBy = "inviterAvatar", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val sentInvitations: MutableList<MatchingInvitation> = mutableListOf()
+    val sentInvitations: MutableList<SimulationInvitation> = mutableListOf()
 
     @OneToMany(mappedBy = "inviteeAvatar", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val receivedInvitations: MutableList<MatchingInvitation> = mutableListOf()
+    val receivedInvitations: MutableList<SimulationInvitation> = mutableListOf()
 
     @Version
     @Column(name = "version", nullable = false)
