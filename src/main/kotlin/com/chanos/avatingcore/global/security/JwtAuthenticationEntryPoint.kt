@@ -3,7 +3,7 @@ package com.chanos.avatingcore.global.security
 import com.chanos.avatingcore.auth.exception.AuthErrorCode
 import com.chanos.avatingcore.global.exception.ErrorCode
 import com.chanos.avatingcore.global.response.ErrorResponse
-import tools.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.MediaType
